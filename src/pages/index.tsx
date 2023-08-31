@@ -1,10 +1,13 @@
 import Head from "next/head";
 import Link from "next/link";
-
-import { api } from "y/utils/api";
+import type { GetServerSidePropsResult } from 'next'
+import { useQuery } from '@tanstack/react-query'
 
 export default function Home() {
-  const hello = api.example.hello.useQuery({ text: "from tRPC" });
+  const test = useQuery({
+    queryKey: ['test'],
+    queryFn: () => fetch('/api/test').then(res => res.json())
+  })
 
   return (
     <>
@@ -43,10 +46,19 @@ export default function Home() {
             </Link>
           </div>
           <p className="text-2xl text-white">
-            {hello.data ? hello.data.greeting : "Loading tRPC query..."}
+            {test.isLoading ? "Loading tRPC query..." : test.data.message}
           </p>
         </div>
       </main>
     </>
   );
 }
+
+// export function getServerSideProps(): GetServerSidePropsResult<unknown> {
+//   return {
+//     redirect: {
+//       statusCode: 301,
+//       destination: '/example'
+//     }
+//   }
+// }
