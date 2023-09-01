@@ -7,6 +7,6 @@ interface LoginDTO {
 
 export default async function handler() {}
 
-export function login(form: LoginDTO) {
+export function apiLogin(form: LoginDTO) {
   return post('/api/user/login', form)
 }

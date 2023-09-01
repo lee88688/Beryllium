@@ -17,24 +17,26 @@ model Example {
 }
 
 model User {
-    id       Int    @id @default(autoincrement())
-    email    String @unique
+    id       Int        @id @default(autoincrement())
+    email    String     @unique
     password String
     book     Book[]
+    category Category[]
 }
 
 model Book {
-    id          Int    @id @default(autoincrement())
-    title       String
-    author      String
-    description String
-    cover       String
-    fileName    String
-    contentPath String
-    current     String
-    userId      Int
-    user        User   @relation(fields: [userId], references: [id])
-    mark        Mark[]
+    id           Int            @id @default(autoincrement())
+    title        String
+    author       String
+    description  String
+    cover        String
+    fileName     String
+    contentPath  String
+    current      String
+    userId       Int
+    user         User           @relation(fields: [userId], references: [id])
+    mark         Mark[]
+    categoryBook CategoryBook[]
 }
 
 model Mark {
@@ -47,4 +49,20 @@ model Mark {
     title          String
     content        String
     selectedString String
+}
+
+model Category {
+    id           Int            @id @default(autoincrement())
+    name         String
+    userId       Int
+    user         User           @relation(fields: [userId], references: [id])
+    categoryBook CategoryBook[]
+}
+
+model CategoryBook {
+    id         Int      @id @default(autoincrement())
+    bookId     Int
+    book       Book     @relation(fields: [bookId], references: [id])
+    categoryId Int
+    category   Category @relation(fields: [categoryId], references: [id])
 }

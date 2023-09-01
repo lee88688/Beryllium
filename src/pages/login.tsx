@@ -8,11 +8,10 @@ import FormControlLabel from '@mui/material/FormControlLabel';
 import Checkbox from '@mui/material/Checkbox';
 import { useFormik } from 'formik';
 import * as yup from 'yup';
-import { login } from './api/user/login';
+import { apiLogin } from './api/user/login';
 
 
 export default function Login() {
-  // const classes = useStyles();
   const router = useRouter();
 
   const formik = useFormik({
@@ -25,7 +24,7 @@ export default function Login() {
       password: yup.string().required()
     }),
     async onSubmit({ email, password }) {
-      await login({ email, password });
+      await apiLogin({ email, password });
       return router.push('/bookshelf');
     }
   });
