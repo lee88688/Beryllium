@@ -1,12 +1,34 @@
 import { post } from "y/utils/request";
+import { withIronSessionApiRoute } from 'iron-session/next'
+import { prisma } from "y/server/db";
+import { createFailRes, createSuccessRes } from "y/utils/apiResponse";
+import { ironOptions } from "y/config";
 
-interface LoginDTO {
+interface LoginParam {
   email: string;
   password: string;
 }
 
-export default async function handler() {}
+// password should encrypt
+export default withIronSessionApiRoute(async function handler(req, res) {
+  const data = req.body as LoginParam
+  const user = await prisma.user.findFirst({
+    where: { email: data.email, password: data.password },
+    select: {
+      id: true
+    }
+  })
 
-export function apiLogin(form: LoginDTO) {
+  if (!user) {
+    return createFailRes(res, 'email or password may not be correct')
+  }
+
+  req.session.user = user
+  await req.session.save()
+  
+  return createSuccessRes(res, null)
+}, ironOptions)
+
+export function apiLogin(form: LoginParam) {
   return post('/api/user/login', form)
 }
