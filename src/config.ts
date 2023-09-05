@@ -1,4 +1,14 @@
 import type { IronSessionOptions } from 'iron-session'
+import type { NextApiHandler, GetServerSideProps } from 'next'
+import { withIronSessionApiRoute, withIronSessionSsr } from 'iron-session/next'
+
+declare module "iron-session" {
+  interface IronSessionData {
+    user: {
+      id: number;
+    };
+  }
+}
 
 export const ironOptions: IronSessionOptions = {
   cookieName: "sealed",
@@ -8,3 +18,11 @@ export const ironOptions: IronSessionOptions = {
 //     secure: process.env.NODE_ENV === "production",
 //   },
 };
+
+export function withSessionRoute(handler: NextApiHandler) {
+  return withIronSessionApiRoute(handler, ironOptions);
+}
+
+export function withSessionSsr<Props extends Record<string, unknown>>(handler: GetServerSideProps<Props>) {
+  return withIronSessionSsr(handler, ironOptions);
+}

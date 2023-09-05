@@ -33,6 +33,7 @@ model Book {
     fileName     String
     contentPath  String
     current      String
+    content      String
     userId       Int
     user         User           @relation(fields: [userId], references: [id])
     mark         Mark[]
