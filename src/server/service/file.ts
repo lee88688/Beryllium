@@ -61,7 +61,7 @@ export async function convertEpubToAsar(
   await rimraf(outputDir);
 }
 
-async function readAsarFile(asarFile: string, filePath: string) {
+export async function readAsarFile(asarFile: string, filePath: string) {
   const ar = new EasyAsar(fsGetter(asarFile));
   await ar.fetchIndex();
   const buffer = await ar.readFile(filePath);

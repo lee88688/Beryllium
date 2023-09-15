@@ -1,10 +1,15 @@
-import type { NextApiHandler } from "next";
+import type { NextApiHandler, PageConfig } from "next";
 import { withSessionRoute } from "y/config";
-import { prisma } from "y/server/db";
 import { createSuccessRes } from "y/utils/apiResponse";
 import formidable from "formidable";
 import { saveEpubFile } from "y/server/service/file";
 import { Readable } from 'stream'
+
+export const config: PageConfig = {
+  api: {
+    bodyParser: false
+  }
+}
 
 const handler: NextApiHandler = async (req, res) => {
   const userId = req.session.user.id

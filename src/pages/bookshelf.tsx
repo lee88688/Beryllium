@@ -14,7 +14,6 @@ import Typography from '@mui/material/Typography';
 import { Hidden } from '@mui/material';
 import Drawer from '@mui/material/Drawer';
 import useTheme from '@mui/material/styles/useTheme';
-import makeStyles from '@mui/material/styles/makeStyles';
 import ImageListItem from '@mui/material/ImageListItem';
 import ImageListItemBar from '@mui/material/ImageListItemBar';
 import Grid from '@mui/material/Grid';
@@ -35,7 +34,7 @@ import MenuItem from '@mui/material/MenuItem';
 import MoreVert from '@mui/icons-material/MoreVert';
 import ExitToApp from '@mui/icons-material/ExitToApp';
 import Settings from '@mui/icons-material/Settings';
-import { useSnackbar } from 'notistack';
+// import { useSnackbar } from 'notistack';
 // import {
 //   getBooks,
 //   getCategories,
@@ -44,11 +43,15 @@ import { useSnackbar } from 'notistack';
 //   selectCategory,
 //   setCategoryAndGetBooks
 // } from './bookshelfSlice';
-import { apiLogout } from './api/user/logout';
+import { apiLogout } from "./clientApi";
 import type * as Prisma from '@prisma/client'
-import { apiRemoveCategory } from './api/category/remove';
+import { apiRemoveCategory } from './clientApi';
 import { GetServerSideProps } from 'next';
 import { prisma } from 'y/server/db';
+import { ironOptions, withSessionSsr } from 'y/config';
+import { apiCreateCategory } from './clientApi';
+import { apiRemoveBooksFromCategory } from './clientApi';
+import { apiAddBooksToCategory } from './clientApi';
 
 enum BookMenuType {
   ADD_CATEGORY = 'ADD_CATEGORY',
@@ -151,80 +154,74 @@ function BookShelfItem(props: BookShelfItemProps) {
 }
 
 
-const useGridStyles = makeStyles(theme => ({
-  root: {
-    justifyContent: 'center',
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fill, 150px)'
-  },
-  gridItem: {
-    // width: '180px',
-    // height: '280px',
-    width: '150px',
-    height: '240px',
-    '& > *': {
-      height: '100%'
-    }
-  },
-  addPaper: {
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
-    color: 'rgba(0, 0, 0, 0.2)',
-    cursor: 'pointer'
-  },
-  addInput: {
-    display: 'none'
-  },
-  imgFullWidth: {
-    // display: 'block',
-    transform: 'none',
-    top: '5px',
-    left: '0',
-    maxWidth: '100%',
-    height: 'auto',
-    maxHeight: '100%'
-  },
-  selectDialog: {
-    minWidth: '300px'
-  }
-}));
+// const useGridStyles = makeStyles(theme => ({
+//   root: {
+//     justifyContent: 'center',
+//     display: 'grid',
+//     gridTemplateColumns: 'repeat(auto-fill, 150px)'
+//   },
+//   gridItem: {
+//     // width: '180px',
+//     // height: '280px',
+//     width: '150px',
+//     height: '240px',
+//     '& > *': {
+//       height: '100%'
+//     }
+//   },
+//   addPaper: {
+//     display: 'flex',
+//     justifyContent: 'center',
+//     alignItems: 'center',
+//     color: 'rgba(0, 0, 0, 0.2)',
+//     cursor: 'pointer'
+//   },
+//   addInput: {
+//     display: 'none'
+//   },
+//   imgFullWidth: {
+//     // display: 'block',
+//     transform: 'none',
+//     top: '5px',
+//     left: '0',
+//     maxWidth: '100%',
+//     height: 'auto',
+//     maxHeight: '100%'
+//   },
+//   selectDialog: {
+//     minWidth: '300px'
+//   }
+// }));
 
-function useBookList() {
-  const classes = useGridStyles();
-  const addInputRef = useRef(null);
+function useBookList(props: BookshelfProps, seleced: number) {
+  const addInputRef = useRef<HTMLInputElement>(null);
   const router = useRouter()
-  const books = useSelector(selectBooks);
-  const categories = useSelector(selectCategories);
-  const category = useSelector(selectCategory);
-  const dispatch = useDispatch();
-  const { enqueueSnackbar } = useSnackbar();
+  const books = props.books;
+  const categories = props.categories;
+  const category = seleced;
+  // const { enqueueSnackbar } = useSnackbar();
   // select category dialog
   const [categoryDialog, setsCategoryDialog] = useState(false);
-  const [selectedBooks, setSelectedBooks] = useState([]);
+  const [selectedBooks, setSelectedBooks] = useState<number[]>([]);
 
-  useEffect(() => {
-    dispatch(getBooks());
-  }, [dispatch]);
+  const currentCategories = categories.find(item => category !== item.id)?.categoryBook ?? [];
 
-  const currentCategories = categories.filter(name => category !== name);
-
-  const bookClick = (id, book, content, title) => {
+  const bookClick = (id: number, book: string, content: string, title: string) => {
     return async () => {
       const { data: cfi } = await apiGetBookCurrent(id);
       const query = new URLSearchParams();
       query.set('book', book);
       query.set('content', content);
-      query.set('id', id);
+      query.set('id', id.toString());
       query.set('cfi', cfi);
       query.set('title', title);
       return router.push(`/reader?${query.toString()}`);
     };
   };
 
-  const bookMenuSelected = async (type, id) => {
+  const bookMenuSelected = async (type: BookMenuType, id: number) => {
     if (type !== BookMenuType.REMOVE_BOOK && Array.isArray(currentCategories) && currentCategories.length === 0) {
-      enqueueSnackbar('暂无类别，请添加后重试！');
+      // enqueueSnackbar('暂无类别，请添加后重试！');
       return;
     }
     switch (type) {
@@ -236,15 +233,15 @@ function useBookList() {
       case BookMenuType.REMOVE_FROM_CATEGORY: {
         if (!category) return;
         await apiRemoveBooksFromCategory(category, [id]);
-        dispatch(getBooks());
-        enqueueSnackbar('移除成功', { variant: 'success' });
+        // dispatch(getBooks());
+        // enqueueSnackbar('移除成功', { variant: 'success' });
         break;
       }
       case BookMenuType.REMOVE_BOOK: {
         if (!id) return;
         await apiDeleteBook(id);
-        dispatch(getBooks());
-        enqueueSnackbar('删除成功', { variant: 'success' });
+        // dispatch(getBooks());
+        // enqueueSnackbar('删除成功', { variant: 'success' });
         break;
       }
       default: {
@@ -254,32 +251,34 @@ function useBookList() {
   };
 
   const inputChange = async () => {
-    enqueueSnackbar('start upload');
-    const [file] = addInputRef.current.files;
+    if (!addInputRef.current) return
+    const inputElement = addInputRef.current
+    // enqueueSnackbar('start upload');
+    const [file] = inputElement.files ?? [];
     if (!file) return;
     await uploadBook(file);
-    dispatch(getBooks());
-    enqueueSnackbar('successful upload', { variant: 'success' });
-    addInputRef.current.value = null;
+    // dispatch(getBooks());
+    // enqueueSnackbar('successful upload', { variant: 'success' });
+    inputElement.value = '';
   };
 
-  const handleCategorySelected = name => async () => {
+  const handleCategorySelected = (id: number) => async () => {
     setsCategoryDialog(false);
-    await apiAddBooksToCategory(name, selectedBooks);
+    await apiAddBooksToCategory(id, selectedBooks);
     setSelectedBooks([]);
-    enqueueSnackbar('添加成功', { variant: 'success' });
+    // enqueueSnackbar('添加成功', { variant: 'success' });
   };
 
   const addItem = category ? null : (
-    <Grid onClick={() => addInputRef.current.click()} item className={classes.gridItem} key="add-button">
-      <Paper classes={{ root: classes.addPaper }} elevation={2}>
+    <Grid onClick={() => addInputRef.current?.click()} item className='w-[150px] h-[240px]' key="add-button">
+      <Paper classes={{ root: 'flex justify-center items-center cursor-pointer text-[rgba(0,0,0,0.2)]' }} elevation={2}>
         <AddIcon fontSize="large" />
         <input
           ref={addInputRef}
           onChange={inputChange}
           type="file"
           accept="application/epub+zip"
-          className={classes.addInput}
+          className='hidden'
         />
       </Paper>
     </Grid>
@@ -287,23 +286,23 @@ function useBookList() {
 
   const gridList = (
     <React.Fragment>
-      <Grid container className={classes.root} justify="center" spacing={2}>
+      <Grid container className='grid justify-center grid-cols-[repeat(auto-fill, 150px)]' spacing={2}>
         {addItem}
         {books.map((book) => (
           <BookShelfItem
-            key={book._id}
+            key={book.id}
             book={book}
-            onClick={bookClick(book._id, book.fileName, book.contentPath, book.title)}
+            onClick={bookClick(book.id, book.fileName, book.contentPath, book.title)}
             onMenuSelected={bookMenuSelected}
           />
         ))}
       </Grid>
-      <Dialog classes={{ paper: classes.selectDialog }} open={categoryDialog} onClose={() => setsCategoryDialog(false)}>
+      <Dialog classes={{ paper: 'min-w-[300px]' }} open={categoryDialog} onClose={() => setsCategoryDialog(false)}>
         <DialogTitle>选择类别</DialogTitle>
         <List>
-          {currentCategories.map(name => (
-            <ListItem key={name} button onClick={handleCategorySelected(name)}>
-              <ListItemText primary={name}/>
+          {currentCategories.map(item => (
+            <ListItem key={item.id} button onClick={handleCategorySelected(item.categoryId)}>
+              <ListItemText primary={item.categoryId}/>
             </ListItem>
           ))}
         </List>
@@ -315,59 +314,64 @@ function useBookList() {
   };
 }
 
-const useDrawerStyles = makeStyles(theme => ({
-  drawer: {
-    [theme.breakpoints.up('sm')]: {
-      width: drawerWidth,
-      flexShrink: 0,
-    },
-  },
-  drawerPaper: {
-    width: drawerWidth,
-  },
-  drawerContent: {
-    height: '100%',
-    display: 'flex',
-    flexDirection: 'column',
-    justifyContent: 'flex-start',
-    alignItems: 'stretch'
-  },
-  exitListItem: {
-    color: '#F44336',
-    '&:hover': {
-      backgroundColor: 'rgba(244, 67, 54, 0.04)'
-    },
-    '& > div': {
-      color: '#F44336'
-    }
-  },
-  dialogPaper: {
-    minWidth: '300px'
-  }
-}));
+// const useDrawerStyles = makeStyles(theme => ({
+//   drawer: {
+//     [theme.breakpoints.up('sm')]: {
+//       width: drawerWidth,
+//       flexShrink: 0,
+//     },
+//   },
+//   drawerPaper: {
+//     width: drawerWidth,
+//   },
+//   drawerContent: {
+//     height: '100%',
+//     display: 'flex',
+//     flexDirection: 'column',
+//     justifyContent: 'flex-start',
+//     alignItems: 'stretch'
+//   },
+//   exitListItem: {
+//     color: '#F44336',
+//     '&:hover': {
+//       backgroundColor: 'rgba(244, 67, 54, 0.04)'
+//     },
+//     '& > div': {
+//       color: '#F44336'
+//     }
+//   },
+//   dialogPaper: {
+//     minWidth: '300px'
+//   }
+// }));
 
-function useDrawer() {
+type UseDrawerProps = {
+  categories: Prisma.Category[];
+  selected: number;
+  onSelected: (id: number) => void
+}
+
+function useDrawer(props: UseDrawerProps) {
   const theme = useTheme();
-  const classes: Record<string, string> = useDrawerStyles();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [categoryDialog, setCategoryDialog] = useState(false);
   const [categoryName, setCategoryName] = useState('');
-  const categories = useSelector(selectCategories);
-  const selectedCategory = useSelector(selectCategory);
-  const dispatch = useDispatch();
-  const { enqueueSnackbar } = useSnackbar();
+  const categories = props.categories;
+  const selectedCategory = props.selected;
+  // const { enqueueSnackbar } = useSnackbar();
   const router = useRouter()
 
-  useEffect(() => {
-    dispatch(getCategories());
-  }, [dispatch]);
+  // useEffect(() => {
+  //   dispatch(getCategories());
+  // }, [dispatch]);
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
   };
 
-  const handleCategoryClick = name => () => {
-    dispatch(setCategoryAndGetBooks(name));
+  const handleCategoryClick = (id: number) => () => {
+    // dispatch(setCategoryAndGetBooks(id));
+    props.onSelected(id)
   };
 
   const exitClick = async () => {
@@ -378,7 +382,7 @@ function useDrawer() {
   const container = window !== undefined ? () => window.document.body : undefined;
 
   const drawer = (
-    <div className={classes.drawerContent}>
+    <div className='h-full flex flex-col justify-start items-stretch'>
       <List>
         <ListItem>
           <Typography variant="h5">Beryllium</Typography>
@@ -390,10 +394,10 @@ function useDrawer() {
       </List>
       <Divider />
       <List subheader={<ListSubheader>分类</ListSubheader>}>
-        {categories.map(name => (
-          <ListItem button key={name} onClick={handleCategoryClick(name)} selected={name === selectedCategory}>
+        {categories.map(item => (
+          <ListItem button key={item.id} onClick={handleCategoryClick(item.id)} selected={item.id === selectedCategory}>
             <ListItemIcon><LabelIcon /></ListItemIcon>
-            <ListItemText primary={name}/>
+            <ListItemText primary={item.name}/>
           </ListItem>
         ))}
         <ListItem button onClick={() => {
@@ -410,7 +414,7 @@ function useDrawer() {
           <ListItemIcon><Settings /></ListItemIcon>
           <ListItemText primary="设置"/>
         </ListItem>
-        <ListItem button className={classes.exitListItem} onClick={exitClick}>
+        <ListItem button className='text-[#F44336] hover:bg-color-[rgba(244,67,54,0.04)]' onClick={exitClick}>
           <ListItemIcon><ExitToApp /></ListItemIcon>
           <ListItemText primary="退出登陆"/>
         </ListItem>
@@ -420,19 +424,18 @@ function useDrawer() {
 
   const createCategory = async () => {
     setCategoryDialog(false);
-    await apiCreateCategory(categoryName);
+    // await apiCreateCategory(categoryName);
     setCategoryName('');
-    dispatch(getCategories());
-    enqueueSnackbar('successful created', { variant: 'success' });
+    // enqueueSnackbar('successful created', { variant: 'success' });
   };
 
   const addCategoryDialog = (
-    <Dialog open={categoryDialog} classes={{ paper: classes.dialogPaper }}>
+    <Dialog open={categoryDialog} classes={{ paper: 'min-w-[300px]' }}>
       <DialogTitle>添加类别</DialogTitle>
       <DialogContent>
         <TextField
           value={categoryName}
-          onInput={e => setCategoryName(e.target.value)}
+          onInput={e => setCategoryName(e.target.value as string)}
           autoFocus
           label="输入类别名称"
           fullWidth
@@ -449,7 +452,7 @@ function useDrawer() {
   );
 
   const drawerItem = (
-    <nav className={classes.drawer} aria-label="mailbox folders">
+    <nav className={'classes.drawer'} aria-label="mailbox folders">
       {/* The implementation can be swapped with js to avoid SEO duplication of links. */}
       <Hidden mdUp implementation="css">
         <Drawer
@@ -459,7 +462,7 @@ function useDrawer() {
           open={mobileOpen}
           onClose={handleDrawerToggle}
           classes={{
-            paper: classes.drawerPaper,
+            paper: 'w-[240px]',
           }}
           ModalProps={{
             keepMounted: true, // Better open performance on mobile.
@@ -471,7 +474,7 @@ function useDrawer() {
       <Hidden xsDown implementation="css">
         <Drawer
           classes={{
-            paper: classes.drawerPaper,
+            paper: 'w-[240px]',
           }}
           variant="permanent"
           open
@@ -521,25 +524,24 @@ const drawerWidth = 240;
 
 interface BookshelfProps {
   books: Prisma.Book[]
-  categories: Prisma.Category[]
+  categories: (Prisma.Category & { categoryBook: Prisma.CategoryBook[] })[]
 }
 
-export default function Bookshelf({books, categories}: BookshelfProps) {
-  const { gridList } = useBookList();
+export default function Bookshelf(props: BookshelfProps) {
   const { handleDrawerToggle, drawerItem } = useDrawer();
-  const [menuAnchor, setMenuAnchor] = useState(null);
-  const selectedCategory = useSelector(selectCategory);
-  const dispatch = useDispatch();
-  const { enqueueSnackbar } = useSnackbar();
+  const [menuAnchor, setMenuAnchor] = useState<HTMLButtonElement>();
+  const [selectedCategory, setSelectedCategory] = useState(0)
+  const { gridList } = useBookList(props, selectedCategory);
+  // const { enqueueSnackbar } = useSnackbar();
 
-  const menuClose = () => setMenuAnchor(null);
-  const menuOpen = e => setMenuAnchor(e.currentTarget);
-  const handleRemoveCategory = async () => {
+  const menuClose = () => setMenuAnchor(undefined);
+  const menuOpen: React.MouseEventHandler<HTMLButtonElement> = (e) => setMenuAnchor(e.currentTarget as HTMLButtonElement);
+  const handleRemoveCategory = () => {
     menuClose();
-    await apiRemoveCategory(selectedCategory);
-    dispatch(setCategoryAndGetBooks(null));
-    dispatch(getCategories());
-    enqueueSnackbar('删除成功', { variant: 'success' });
+    apiRemoveCategory({ id: selectedCategory });
+    // dispatch(setCategoryAndGetBooks(null));
+    // dispatch(getCategories());
+    // enqueueSnackbar('删除成功', { variant: 'success' });
   };
 
   const menuButton = !selectedCategory ? null : (
@@ -584,10 +586,23 @@ export default function Bookshelf({books, categories}: BookshelfProps) {
   );
 }
 
-export const getServerSideProps: GetServerSideProps<BookshelfProps> = async () => {
-  const books = await prisma.book.findMany({ where: { userId: 0 }})
+export const getServerSideProps: GetServerSideProps<BookshelfProps> = withSessionSsr(async ({ req }) => {
+  const user = req.session.user
+  const books = await prisma.book.findMany({ where: { userId: user.id }})
+  const categories = await prisma.category.findMany({
+    where: {
+      userId: user.id,
+    },
+    // select: {
+    //   id: true,
+    //   name: true,
+    // },
+    include: {
+      categoryBook: true
+    }
+  })
 
   return {
-    props: { books, categories: [] }
+    props: { books, categories }
   }
-}
+})

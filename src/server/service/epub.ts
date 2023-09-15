@@ -45,7 +45,7 @@ export async function parseNcx(ncxString: string) {
   return toc;
 }
 
-export async function parseToc(tocString: string) {
+export async function parseToc(tocString: string): Promise<unknown> {
   // todo: suport epub3 Navigation Document
   return parseNcx(tocString);
 }
