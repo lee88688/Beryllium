@@ -11,6 +11,17 @@ import { env } from "y/env.mjs";
 //   prisma: PrismaClient | undefined;
 // };
 
+function getContentObject(content: string) {
+  if (!content) return {} as any;
+  return JSON.parse(content);
+}
+
+function getContentMetadata(contentObject: any) {
+  const { package: p } = contentObject ?? ({} as any);
+  if (!p) return {};
+  return p.metadata[0];
+}
+
 export const prisma =
   // globalForPrisma.prisma ??
   new PrismaClient({
@@ -23,7 +34,7 @@ export const prisma =
           contentObject: {
             needs: { content: true },
             compute(data) {
-              return JSON.parse(data.content);
+              return getContentObject(data.content);
             },
           },
         },
@@ -35,9 +46,7 @@ export const prisma =
           contentMetadata: {
             needs: { contentObject: true },
             compute(data) {
-              const { package: p } = data.contentObject ?? ({} as any);
-              if (!p) return {};
-              return p.metadata[0];
+              return getContentMetadata(data.contentObject);
             },
           },
         },
@@ -90,16 +99,28 @@ function getMetadataFromKey(book: Book, key: string) {
     : "";
 }
 
-export function fillInBaseInfo(book: Book) {
+export function fillInBaseInfo(book: Omit<Prisma.Book, 'id'>) {
   if (!book.content) {
     return;
   }
-  book.title = getMetadataFromKey(book, "title");
-  book.description = getMetadataFromKey(book, "description");
-  book.author = getMetadataFromKey(book, "creator");
-  const coverId = getMetaFromName(book, "cover") as string;
-  const coverItem = getManifestItemFromId(book, coverId) as { href: string };
-  book.cover = getManifestItemHrefUrl(book, coverItem.href);
+
+  const contentObject = getContentObject(book.content)
+  const contentMetadata = getContentMetadata(contentObject)
+  const resultBook = new Proxy(book, {
+    get(target, prop, receiver) {
+      if (prop === 'contentObject') return contentObject
+      else if (prop === 'contentMetadata') return contentMetadata
+
+      return Reflect.get(target, prop, receiver)
+    }
+  }) as Book
+
+  book.title = getMetadataFromKey(resultBook, "title");
+  book.description = getMetadataFromKey(resultBook, "description");
+  book.author = getMetadataFromKey(resultBook, "creator");
+  const coverId = getMetaFromName(resultBook, "cover") as string;
+  const coverItem = getManifestItemFromId(resultBook, coverId) as { href: string };
+  book.cover = getManifestItemHrefUrl(resultBook, coverItem.href);
 }
 
 export function getTocPath(book: Book) {

@@ -19,6 +19,9 @@ export const ironOptions: IronSessionOptions = {
 //   },
 };
 
+export const asarDir = process.env.ASAR_DIR ?? '';
+export const tempDir = process.env.TEMP_DIR ?? '';
+
 export function withSessionRoute(handler: NextApiHandler) {
   return withIronSessionApiRoute(handler, ironOptions);
 }
