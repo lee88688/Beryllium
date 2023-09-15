@@ -100,13 +100,6 @@ export async function saveEpubFile(userId: number, fileStream: Readable) {
     content: JSON.stringify(content),
   } as Omit<Prisma.Book, 'id'>;
 
-  // const book = await prisma.book.create({
-  //   fileName: bookFileName,
-  //   userId,
-  //   contentPath,
-  //   content: JSON.stringify(content),
-  // })
-
   fillInBaseInfo(book);
 
   await prisma.book.create({
