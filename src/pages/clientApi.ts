@@ -4,6 +4,7 @@ import {post} from "y/utils/request";
 import { type CreateCategoryParam } from "./api/category/create";
 import { type RemoveCategoryParam } from "./api/category/remove";
 import { type LoginParam } from "./api/user/login";
+import { DeleteBookParam } from "./api/book/destroy";
 
 export function apiAddBooksToCategory(data: AddBooksToCategoryDTO[]) {
   return post("/api/category/addBooks", data);
@@ -30,4 +31,16 @@ export function apiLogin(form: LoginParam) {
 
 export function apiLogout() {
   return post("/api/user/logout");
+}
+
+export function apiDeleteBook(param: DeleteBookParam) {
+  return post('/api/book/destroy', param)
+}
+
+export function apiGetBookCurrent() {
+  return post('/api/book/current')
+}
+
+export function uploadBook(form: FormData) {
+  return post('/api/book/create', form)
 }

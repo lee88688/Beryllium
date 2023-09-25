@@ -3,7 +3,7 @@ import { createFailRes, createSuccessRes } from "y/utils/apiResponse";
 import { withSessionRoute } from "y/config";
 import { type NextApiHandler } from "next";
 
-interface DeleteBookParam {
+export interface DeleteBookParam {
   id: number
 }
 

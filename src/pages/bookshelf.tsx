@@ -28,7 +28,7 @@ import DialogContent from '@mui/material/DialogContent';
 import DialogActions from '@mui/material/DialogActions';
 import Button from '@mui/material/Button';
 import TextField from '@mui/material/TextField';
-import { apiDeleteBook, apiGetBookCurrent, uploadBook } from '../../api/file';
+import { apiDeleteBook, apiGetBookCurrent, uploadBook } from './clientApi';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 import MoreVert from '@mui/icons-material/MoreVert';
@@ -46,9 +46,9 @@ import Settings from '@mui/icons-material/Settings';
 import { apiLogout } from "./clientApi";
 import type * as Prisma from '@prisma/client'
 import { apiRemoveCategory } from './clientApi';
-import { GetServerSideProps } from 'next';
+import { type GetServerSideProps } from 'next';
 import { prisma } from 'y/server/db';
-import { ironOptions, withSessionSsr } from 'y/config';
+import { withSessionSsr } from 'y/config';
 import { apiCreateCategory } from './clientApi';
 import { apiRemoveBooksFromCategory } from './clientApi';
 import { apiAddBooksToCategory } from './clientApi';
@@ -352,7 +352,7 @@ type UseDrawerProps = {
 }
 
 function useDrawer(props: UseDrawerProps) {
-  const theme = useTheme();
+  // const theme = useTheme();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [categoryDialog, setCategoryDialog] = useState(false);
   const [categoryName, setCategoryName] = useState('');
@@ -379,7 +379,7 @@ function useDrawer(props: UseDrawerProps) {
     return router.push('/login');
   };
 
-  const container = window !== undefined ? () => window.document.body : undefined;
+  const container = typeof window !== undefined ? () => window.document.body : undefined;
 
   const drawer = (
     <div className='h-full flex flex-col justify-start items-stretch'>
@@ -458,7 +458,7 @@ function useDrawer(props: UseDrawerProps) {
         <Drawer
           container={container}
           variant="temporary"
-          anchor={theme.direction === 'rtl' ? 'right' : 'left'}
+          anchor={'left'}
           open={mobileOpen}
           onClose={handleDrawerToggle}
           classes={{
@@ -528,9 +528,9 @@ interface BookshelfProps {
 }
 
 export default function Bookshelf(props: BookshelfProps) {
-  const { handleDrawerToggle, drawerItem } = useDrawer();
-  const [menuAnchor, setMenuAnchor] = useState<HTMLButtonElement>();
   const [selectedCategory, setSelectedCategory] = useState(0)
+  const { handleDrawerToggle, drawerItem } = useDrawer({ selected: selectedCategory, onSelected: setSelectedCategory, categories: props.categories});
+  const [menuAnchor, setMenuAnchor] = useState<HTMLButtonElement>();
   const { gridList } = useBookList(props, selectedCategory);
   // const { enqueueSnackbar } = useSnackbar();
 

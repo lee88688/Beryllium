@@ -82,7 +82,7 @@ export default function Login() {
             variant="contained"
             color="primary"
             className='mt-2'
-            disabled={!formik.isSubmitting}
+            disabled={!formik.isValid}
             onClick={() => formik.handleSubmit()}
           >
             登 陆

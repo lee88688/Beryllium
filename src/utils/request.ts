@@ -3,6 +3,13 @@ export function get<T>(url: string) {
 }
 
 export function post<T, B>(url: string, body?: B) {
+  if (body instanceof FormData) {
+    return fetch(url, {
+      method: 'POST',
+      body
+    }).then(res => res.json() as T)
+  }
+
   return fetch(url, {
     method: 'POST',
     headers: {
