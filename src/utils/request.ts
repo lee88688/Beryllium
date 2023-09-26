@@ -3,6 +3,8 @@ export type ApiResponseData<T> = {
   isSuccess: boolean
 }
 
+// TODO: when isSuccess is false throw error
+
 export function get<T>(url: string) {
   return fetch(url).then(res => res.json() as Promise<ApiResponseData<T>>)
 }
