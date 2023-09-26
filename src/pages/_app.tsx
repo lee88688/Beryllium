@@ -3,6 +3,7 @@ import {
   QueryClient,
   QueryClientProvider,
 } from '@tanstack/react-query'
+import { SnackbarProvider } from 'notistack'
 
 import "y/styles/globals.css";
 import '@fontsource/roboto/300.css';
@@ -14,7 +15,9 @@ const queryClient = new QueryClient()
 
 const App: AppType = ({ Component, pageProps }) => {
   return <QueryClientProvider client={queryClient}>
-    <Component {...pageProps} />
+    <SnackbarProvider>
+      <Component {...pageProps} />
+    </SnackbarProvider>
   </QueryClientProvider>
 };
 

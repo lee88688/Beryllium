@@ -1,4 +1,4 @@
-import { type AddBooksToCategoryDTO } from "./api/category/addBooks";
+import { type AddBooksToCategoryParams } from "./api/category/addBooks";
 
 import {post} from "y/utils/request";
 import { type CreateCategoryParam } from "./api/category/create";
@@ -6,7 +6,7 @@ import { type RemoveCategoryParam } from "./api/category/remove";
 import { type LoginParam } from "./api/user/login";
 import { DeleteBookParam } from "./api/book/destroy";
 
-export function apiAddBooksToCategory(data: AddBooksToCategoryDTO[]) {
+export function apiAddBooksToCategory(data: AddBooksToCategoryParams[]) {
   return post("/api/category/addBooks", data);
 }
 
@@ -37,10 +37,12 @@ export function apiDeleteBook(param: DeleteBookParam) {
   return post('/api/book/destroy', param)
 }
 
-export function apiGetBookCurrent() {
-  return post('/api/book/current')
+export function apiGetBookCurrent(id: number | string) {
+  return post<string>(`/api/book/${id}`)
 }
 
-export function uploadBook(form: FormData) {
+export function uploadBook(file: File) {
+  const form = new FormData()
+  form.append('file', file)
   return post('/api/book/create', form)
 }

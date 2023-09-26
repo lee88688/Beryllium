@@ -11,7 +11,7 @@ import Toolbar from '@mui/material/Toolbar';
 import IconButton from '@mui/material/IconButton';
 import MenuIcon from '@mui/icons-material/Menu';
 import Typography from '@mui/material/Typography';
-import { Hidden } from '@mui/material';
+import { Box, Hidden } from '@mui/material';
 import Drawer from '@mui/material/Drawer';
 import useTheme from '@mui/material/styles/useTheme';
 import ImageListItem from '@mui/material/ImageListItem';
@@ -52,39 +52,13 @@ import { withSessionSsr } from 'y/config';
 import { apiCreateCategory } from './clientApi';
 import { apiRemoveBooksFromCategory } from './clientApi';
 import { apiAddBooksToCategory } from './clientApi';
+import { useSnackbar } from 'notistack';
 
 enum BookMenuType {
   ADD_CATEGORY = 'ADD_CATEGORY',
   REMOVE_FROM_CATEGORY = 'REMOVE_FROM_CATEGORY',
   REMOVE_BOOK = 'REMOVE_BOOK'
 };
-
-// const useGridItemStyles = makeStyles(() => ({
-//   gridItem: {
-//     // width: '180px',
-//     // height: '280px',
-//     width: '150px',
-//     height: '240px',
-//     '& > *': {
-//       height: '100%'
-//     }
-//   },
-//   tile: {
-//     cursor: 'pointer',
-//     height: '100%'
-//     // position: 'relative'
-//   },
-//   paper: {
-//     position: 'relative'
-//   },
-//   menuIcon: {
-//     position: 'absolute',
-//     top: 0,
-//     right: 0,
-//     zIndex: 1,
-//     color: 'white'
-//   }
-// }));
 
 interface BookShelfItemProps {
   book: Prisma.Book & { category: Prisma.Category[] };
@@ -93,7 +67,7 @@ interface BookShelfItemProps {
 }
 
 export function getFileUrl(fileName: string, path: string) {
-  return `/book-file/${fileName}/${path}`;
+  return `/api/book/file/${fileName}/${path}`;
 }
 
 function BookShelfItem(props: BookShelfItemProps) {
@@ -153,53 +127,13 @@ function BookShelfItem(props: BookShelfItemProps) {
   );
 }
 
-
-// const useGridStyles = makeStyles(theme => ({
-//   root: {
-//     justifyContent: 'center',
-//     display: 'grid',
-//     gridTemplateColumns: 'repeat(auto-fill, 150px)'
-//   },
-//   gridItem: {
-//     // width: '180px',
-//     // height: '280px',
-//     width: '150px',
-//     height: '240px',
-//     '& > *': {
-//       height: '100%'
-//     }
-//   },
-//   addPaper: {
-//     display: 'flex',
-//     justifyContent: 'center',
-//     alignItems: 'center',
-//     color: 'rgba(0, 0, 0, 0.2)',
-//     cursor: 'pointer'
-//   },
-//   addInput: {
-//     display: 'none'
-//   },
-//   imgFullWidth: {
-//     // display: 'block',
-//     transform: 'none',
-//     top: '5px',
-//     left: '0',
-//     maxWidth: '100%',
-//     height: 'auto',
-//     maxHeight: '100%'
-//   },
-//   selectDialog: {
-//     minWidth: '300px'
-//   }
-// }));
-
 function useBookList(props: BookshelfProps, seleced: number) {
   const addInputRef = useRef<HTMLInputElement>(null);
   const router = useRouter()
   const books = props.books;
   const categories = props.categories;
   const category = seleced;
-  // const { enqueueSnackbar } = useSnackbar();
+  const { enqueueSnackbar } = useSnackbar();
   // select category dialog
   const [categoryDialog, setsCategoryDialog] = useState(false);
   const [selectedBooks, setSelectedBooks] = useState<number[]>([]);
@@ -221,7 +155,7 @@ function useBookList(props: BookshelfProps, seleced: number) {
 
   const bookMenuSelected = async (type: BookMenuType, id: number) => {
     if (type !== BookMenuType.REMOVE_BOOK && Array.isArray(currentCategories) && currentCategories.length === 0) {
-      // enqueueSnackbar('暂无类别，请添加后重试！');
+      enqueueSnackbar('暂无类别，请添加后重试！');
       return;
     }
     switch (type) {
@@ -234,14 +168,14 @@ function useBookList(props: BookshelfProps, seleced: number) {
         if (!category) return;
         await apiRemoveBooksFromCategory(category, [id]);
         // dispatch(getBooks());
-        // enqueueSnackbar('移除成功', { variant: 'success' });
+        enqueueSnackbar('移除成功', { variant: 'success' });
         break;
       }
       case BookMenuType.REMOVE_BOOK: {
         if (!id) return;
         await apiDeleteBook(id);
         // dispatch(getBooks());
-        // enqueueSnackbar('删除成功', { variant: 'success' });
+        enqueueSnackbar('删除成功', { variant: 'success' });
         break;
       }
       default: {
@@ -258,7 +192,7 @@ function useBookList(props: BookshelfProps, seleced: number) {
     if (!file) return;
     await uploadBook(file);
     // dispatch(getBooks());
-    // enqueueSnackbar('successful upload', { variant: 'success' });
+    enqueueSnackbar('successful upload', { variant: 'success' });
     inputElement.value = '';
   };
 
@@ -266,12 +200,12 @@ function useBookList(props: BookshelfProps, seleced: number) {
     setsCategoryDialog(false);
     await apiAddBooksToCategory(id, selectedBooks);
     setSelectedBooks([]);
-    // enqueueSnackbar('添加成功', { variant: 'success' });
+    enqueueSnackbar('添加成功', { variant: 'success' });
   };
 
   const addItem = category ? null : (
     <Grid onClick={() => addInputRef.current?.click()} item className='w-[150px] h-[240px]' key="add-button">
-      <Paper classes={{ root: 'flex justify-center items-center cursor-pointer text-[rgba(0,0,0,0.2)]' }} elevation={2}>
+      <Paper classes={{ root: 'flex justify-center h-full items-center cursor-pointer text-[rgba(0,0,0,0.2)]' }} elevation={2}>
         <AddIcon fontSize="large" />
         <input
           ref={addInputRef}
@@ -286,7 +220,7 @@ function useBookList(props: BookshelfProps, seleced: number) {
 
   const gridList = (
     <React.Fragment>
-      <Grid container className='grid justify-center grid-cols-[repeat(auto-fill, 150px)]' spacing={2}>
+      <Grid container className='ml-[240px] w-[calc(100%-240px)] grid justify-center grid-cols-[repeat(auto-fill, 150px)]' spacing={2}>
         {addItem}
         {books.map((book) => (
           <BookShelfItem
@@ -314,36 +248,6 @@ function useBookList(props: BookshelfProps, seleced: number) {
   };
 }
 
-// const useDrawerStyles = makeStyles(theme => ({
-//   drawer: {
-//     [theme.breakpoints.up('sm')]: {
-//       width: drawerWidth,
-//       flexShrink: 0,
-//     },
-//   },
-//   drawerPaper: {
-//     width: drawerWidth,
-//   },
-//   drawerContent: {
-//     height: '100%',
-//     display: 'flex',
-//     flexDirection: 'column',
-//     justifyContent: 'flex-start',
-//     alignItems: 'stretch'
-//   },
-//   exitListItem: {
-//     color: '#F44336',
-//     '&:hover': {
-//       backgroundColor: 'rgba(244, 67, 54, 0.04)'
-//     },
-//     '& > div': {
-//       color: '#F44336'
-//     }
-//   },
-//   dialogPaper: {
-//     minWidth: '300px'
-//   }
-// }));
 
 type UseDrawerProps = {
   categories: Prisma.Category[];
@@ -494,34 +398,6 @@ function useDrawer(props: UseDrawerProps) {
 
 const drawerWidth = 240;
 
-// const useStyles = makeStyles((theme) => ({
-//   root: {
-//     display: 'flex',
-//   },
-//   appBar: {
-//     [theme.breakpoints.up('sm')]: {
-//       width: `calc(100% - ${drawerWidth}px)`,
-//       marginLeft: drawerWidth,
-//     },
-//   },
-//   sidebarButton: {
-//     marginRight: theme.spacing(2),
-//     [theme.breakpoints.up('sm')]: {
-//       display: 'none',
-//     },
-//   },
-//   appBarTitle: {
-//     flexGrow: 1
-//   },
-//   menuButton: {},
-//   // necessary for content to be below app bar
-//   toolbar: theme.mixins.toolbar,
-//   content: {
-//     flexGrow: 1,
-//     padding: `${theme.spacing(3)}px 0`,
-//   },
-// }));
-
 interface BookshelfProps {
   books: Prisma.Book[]
   categories: (Prisma.Category & { categoryBook: Prisma.CategoryBook[] })[]
@@ -556,8 +432,8 @@ export default function Bookshelf(props: BookshelfProps) {
   );
 
   return (
-    <Container className='flex'>
-      <AppBar position="fixed" className=''>
+    <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+      <AppBar component={'nav'} className='ml-[240px] w-[calc(100%-240px)]'>
         <Toolbar>
           <IconButton
             color="inherit"
@@ -578,11 +454,11 @@ export default function Bookshelf(props: BookshelfProps) {
         </Toolbar>
       </AppBar>
       { drawerItem }
-      <main className='flex-grow px-3 py-0'>
-        <div className='' />
+      <Box component={'main'} sx={{ p: 3 }}>
+        <Toolbar/>
         {gridList}
-      </main>
-    </Container>
+      </Box>
+    </Box>
   );
 }
 

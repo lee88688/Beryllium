@@ -15,20 +15,23 @@ const handler: NextApiHandler = async (req, res) => {
   const userId = req.session.user.id
 
   const form = formidable({});
+  let cacheData = Buffer.alloc(0)
   form.onPart = (part) => {
     if (part.originalFilename) {
-      const readable = new Readable()
-      saveEpubFile(userId, readable).catch(e => {
-        console.error(e)
-      })
+      console.log('form file', part.originalFilename)
       part.on('data', (chunk: Buffer) => {
-        readable.emit('data', chunk)
+        cacheData = Buffer.concat([cacheData, chunk])
       })
-      part.on('end', () => readable.emit('end'))
     }
   };
 
   await form.parse(req)
+
+  // create readable from part data
+  const readable = Readable.from(cacheData)
+  await saveEpubFile(userId, readable).catch(e => {
+    console.error(e)
+  })
 
   createSuccessRes(res, null)
 };

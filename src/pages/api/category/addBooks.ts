@@ -3,13 +3,13 @@ import { withSessionRoute } from "y/config";
 import { prisma } from "y/server/db";
 import { createSuccessRes } from "y/utils/apiResponse";
 
-export interface AddBooksToCategoryDTO {
+export interface AddBooksToCategoryParams {
   bookId: number;
   categoryId: number;
 }
 
 const handler: NextApiHandler = async (req, res) => {
-  const data = req.body as AddBooksToCategoryDTO[];
+  const data = req.body as AddBooksToCategoryParams[];
   for (const item of data) {
     await prisma.categoryBook.create({ data: item });
   }

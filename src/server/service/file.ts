@@ -97,6 +97,7 @@ export async function saveEpubFile(userId: number, fileStream: Readable) {
     fileName: bookFileName,
     userId,
     contentPath,
+    current: '',
     content: JSON.stringify(content),
   } as Omit<Prisma.Book, 'id'>;
 
