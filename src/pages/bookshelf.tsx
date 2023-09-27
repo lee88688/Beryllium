@@ -162,14 +162,9 @@ type BookListProps = BookshelfProps & {
 
 const useGridStyles = makeStyles()((theme) => ({
   root: {
-    // justifyContent: "center",
-    // display: "grid",
-    // gridTemplateColumns: "repeat(auto-fill, 150px)",
     padding: theme.spacing(2),
   },
   gridItem: {
-    // width: '180px',
-    // height: '280px',
     width: "150px",
     height: "240px",
     "& > *": {
