@@ -41,6 +41,10 @@ import { withSessionSsr } from "y/config";
 import { apiRemoveBooksFromCategory } from "./clientApi";
 import { apiAddBooksToCategory } from "./clientApi";
 import { useSnackbar } from "notistack";
+import { makeStyles } from "../utils/makesStyles";
+
+const BOOK_HEIGHT = 240;
+const BOOK_WIDTH = 150;
 
 enum BookMenuType {
   ADD_CATEGORY = "ADD_CATEGORY",
@@ -58,10 +62,39 @@ export function getFileUrl(fileName: string, path: string) {
   return `/api/book/file/${fileName}/${path}`;
 }
 
+const useGridItemStyles = makeStyles()(() => ({
+  gridItem: {
+    // width: '180px',
+    // height: '280px',
+    width: "150px",
+    height: "240px",
+    "& > *": {
+      height: "100%",
+    },
+  },
+  tile: {
+    cursor: "pointer",
+    height: "100%",
+    // position: 'relative'
+  },
+  paper: {
+    position: "relative",
+  },
+  menuIcon: {
+    position: "absolute",
+    top: 0,
+    right: 0,
+    zIndex: 1,
+    color: "white",
+  },
+}));
+
 function BookShelfItem(props: BookShelfItemProps) {
   const { book, onClick } = props;
   const [anchorEl, setAnchorEl] = useState<HTMLDListElement | null>(null);
   const category = book.category;
+
+  const { classes } = useGridItemStyles();
 
   const menuOpen = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -75,10 +108,10 @@ function BookShelfItem(props: BookShelfItemProps) {
   };
 
   return (
-    <Grid className="h-[240px] w-[150px]" item>
-      <Paper elevation={2} className="relative" onClick={onClick}>
+    <Grid className={classes.gridItem} item>
+      <Paper elevation={2} className={classes.paper} onClick={onClick}>
         <IconButton
-          className="t-0 r-0 absolute z-10 text-white"
+          className={classes.menuIcon}
           onClick={menuOpen}
           size="small"
         >
@@ -87,7 +120,7 @@ function BookShelfItem(props: BookShelfItemProps) {
         <ImageListItem
           component="div"
           classes={{
-            root: "h-full pointer",
+            root: classes.tile,
           }}
         >
           <img
@@ -127,6 +160,46 @@ type BookListProps = BookshelfProps & {
   selected: number;
 };
 
+const useGridStyles = makeStyles()((theme) => ({
+  root: {
+    // justifyContent: "center",
+    // display: "grid",
+    // gridTemplateColumns: "repeat(auto-fill, 150px)",
+    padding: theme.spacing(2),
+  },
+  gridItem: {
+    // width: '180px',
+    // height: '280px',
+    width: "150px",
+    height: "240px",
+    "& > *": {
+      height: "100%",
+    },
+  },
+  addPaper: {
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    color: "rgba(0, 0, 0, 0.2)",
+    cursor: "pointer",
+  },
+  addInput: {
+    display: "none",
+  },
+  imgFullWidth: {
+    // display: 'block',
+    transform: "none",
+    top: "5px",
+    left: "0",
+    maxWidth: "100%",
+    height: "auto",
+    maxHeight: "100%",
+  },
+  selectDialog: {
+    minWidth: "300px",
+  },
+}));
+
 function BookList(props: BookListProps) {
   const addInputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
@@ -137,6 +210,8 @@ function BookList(props: BookListProps) {
   // select category dialog
   const [categoryDialog, setsCategoryDialog] = useState(false);
   const [selectedBooks, setSelectedBooks] = useState<number[]>([]);
+
+  const { classes } = useGridStyles();
 
   const currentCategories =
     categories.find((item) => category !== item.id)?.categoryBook ?? [];
@@ -217,12 +292,12 @@ function BookList(props: BookListProps) {
     <Grid
       onClick={() => addInputRef.current?.click()}
       item
-      className="h-[240px] w-[150px]"
+      className={classes.gridItem}
       key="add-button"
     >
       <Paper
         classes={{
-          root: "flex justify-center h-full items-center cursor-pointer text-[rgba(0,0,0,0.2)]",
+          root: classes.addPaper,
         }}
         elevation={2}
       >
@@ -232,7 +307,7 @@ function BookList(props: BookListProps) {
           onChange={inputChange}
           type="file"
           accept="application/epub+zip"
-          className="hidden"
+          className={classes.addInput}
         />
       </Paper>
     </Grid>
@@ -243,7 +318,7 @@ function BookList(props: BookListProps) {
       <Grid
         container
         direction={"row"}
-        className="ml-[240px] w-[calc(100%-240px)]"
+        className={classes.root}
         rowGap={2}
         columnGap={2}
       >
@@ -263,7 +338,7 @@ function BookList(props: BookListProps) {
         ))}
       </Grid>
       <Dialog
-        classes={{ paper: "min-w-[300px]" }}
+        classes={{ paper: classes.selectDialog }}
         open={categoryDialog}
         onClose={() => setsCategoryDialog(false)}
       >
@@ -290,8 +365,38 @@ type UseDrawerProps = {
   onSelected: (id: number) => void;
 };
 
+const useDrawerStyles = makeStyles()((theme) => ({
+  drawer: {
+    [theme.breakpoints.up("sm")]: {
+      width: drawerWidth,
+      flexShrink: 0,
+    },
+  },
+  drawerPaper: {
+    width: drawerWidth,
+  },
+  drawerContent: {
+    height: "100%",
+    display: "flex",
+    flexDirection: "column",
+    justifyContent: "flex-start",
+    alignItems: "stretch",
+  },
+  exitListItem: {
+    color: "#F44336",
+    "&:hover": {
+      backgroundColor: "rgba(244, 67, 54, 0.04)",
+    },
+    "& > div": {
+      color: "#F44336",
+    },
+  },
+  dialogPaper: {
+    minWidth: "300px",
+  },
+}));
+
 function useDrawer(props: UseDrawerProps) {
-  // const theme = useTheme();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [categoryDialog, setCategoryDialog] = useState(false);
   const [categoryName, setCategoryName] = useState("");
@@ -299,6 +404,8 @@ function useDrawer(props: UseDrawerProps) {
   const selectedCategory = props.selected;
   // const { enqueueSnackbar } = useSnackbar();
   const router = useRouter();
+
+  const { classes } = useDrawerStyles();
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
@@ -318,7 +425,7 @@ function useDrawer(props: UseDrawerProps) {
     typeof window !== undefined ? () => window.document.body : undefined;
 
   const drawer = (
-    <div className="flex h-full flex-col items-stretch justify-start">
+    <div className={classes.drawerContent}>
       <List>
         <ListItem>
           <Typography variant="h5">Beryllium</Typography>
@@ -370,11 +477,7 @@ function useDrawer(props: UseDrawerProps) {
           </ListItemIcon>
           <ListItemText primary="设置" />
         </ListItem>
-        <ListItem
-          button
-          className="hover:bg-color-[rgba(244,67,54,0.04)] text-[#F44336]"
-          onClick={exitClick}
-        >
+        <ListItem button className={classes.exitListItem} onClick={exitClick}>
           <ListItemIcon>
             <ExitToApp />
           </ListItemIcon>
@@ -392,7 +495,7 @@ function useDrawer(props: UseDrawerProps) {
   };
 
   const addCategoryDialog = (
-    <Dialog open={categoryDialog} classes={{ paper: "min-w-[300px]" }}>
+    <Dialog open={categoryDialog} classes={{ paper: classes.dialogPaper }}>
       <DialogTitle>添加类别</DialogTitle>
       <DialogContent>
         <TextField
@@ -421,7 +524,7 @@ function useDrawer(props: UseDrawerProps) {
   );
 
   const drawerItem = (
-    <nav className={"classes.drawer"} aria-label="mailbox folders">
+    <nav className={classes.drawer} aria-label="mailbox folders">
       {/* The implementation can be swapped with js to avoid SEO duplication of links. */}
       <Hidden mdUp implementation="css">
         <Drawer
@@ -431,7 +534,7 @@ function useDrawer(props: UseDrawerProps) {
           open={mobileOpen}
           onClose={handleDrawerToggle}
           classes={{
-            paper: "w-[240px]",
+            paper: classes.drawerPaper,
           }}
           ModalProps={{
             keepMounted: true, // Better open performance on mobile.
@@ -443,7 +546,7 @@ function useDrawer(props: UseDrawerProps) {
       <Hidden xsDown implementation="css">
         <Drawer
           classes={{
-            paper: "w-[240px]",
+            paper: classes.dialogPaper,
           }}
           variant="permanent"
           open
@@ -461,12 +564,38 @@ function useDrawer(props: UseDrawerProps) {
   };
 }
 
-const drawerWidth = 240;
+const drawerWidth = 300;
 
 interface BookshelfProps {
   books: Prisma.Book[];
   categories: (Prisma.Category & { categoryBook: Prisma.CategoryBook[] })[];
 }
+
+const useStyles = makeStyles()((theme) => ({
+  root: {
+    display: "flex",
+  },
+  appBar: {
+    [theme.breakpoints.up("sm")]: {
+      width: `calc(100% - ${drawerWidth}px)`,
+      marginLeft: drawerWidth,
+    },
+  },
+  sidebarButton: {
+    marginRight: theme.spacing(2),
+    [theme.breakpoints.up("sm")]: {
+      display: "none",
+    },
+  },
+  appBarTitle: {
+    flexGrow: 1,
+  },
+  menuButton: {},
+  content: {
+    flexGrow: 1,
+    padding: `${theme.spacing(3)}px 0`,
+  },
+}));
 
 export default function Bookshelf(props: BookshelfProps) {
   const [selectedCategory, setSelectedCategory] = useState(0);
@@ -477,6 +606,8 @@ export default function Bookshelf(props: BookshelfProps) {
   });
   const [menuAnchor, setMenuAnchor] = useState<HTMLButtonElement>();
   const { enqueueSnackbar } = useSnackbar();
+
+  const { classes } = useStyles();
 
   const menuClose = () => setMenuAnchor(undefined);
   const menuOpen: React.MouseEventHandler<HTMLButtonElement> = (e) =>
@@ -501,18 +632,19 @@ export default function Bookshelf(props: BookshelfProps) {
   );
 
   return (
-    <Box sx={{ display: "flex", flexDirection: "column" }}>
-      <AppBar component={"nav"} className="ml-[240px] w-[calc(100%-240px)]">
+    <Box className={classes.root}>
+      <AppBar component={"nav"} className={classes.appBar}>
         <Toolbar>
           <IconButton
             color="inherit"
             aria-label="open drawer"
             edge="start"
+            className={classes.sidebarButton}
             onClick={handleDrawerToggle}
           >
             <MenuIcon />
           </IconButton>
-          <Typography className="flex-grow" variant="h6" noWrap>
+          <Typography className={classes.appBarTitle} variant="h6" noWrap>
             Bookshelf
           </Typography>
           {menuButton}
@@ -526,7 +658,7 @@ export default function Bookshelf(props: BookshelfProps) {
         </Toolbar>
       </AppBar>
       {drawerItem}
-      <Box component={"main"} sx={{ p: 3 }}>
+      <Box component={"main"} className={classes.content}>
         <Toolbar />
         <BookList
           categories={props.categories}
