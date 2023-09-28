@@ -1,32 +1,44 @@
 import React, { useMemo, useState } from "react";
-import Typography from "@mui/material/Typography";
 import ListItem from "@mui/material/ListItem";
-import Box from "@mui/material/Box";
-import Divider from "@mui/material/Divider";
+import Typography from "@mui/material/Typography";
 import List from "@mui/material/List";
-import MoreVert from "@mui/icons-material/MoreVert";
-import IconButton from "@mui/material/IconButton";
-import MenuItem from "@mui/material/MenuItem";
-import Menu from "@mui/material/Menu";
+import Divider from "@mui/material/Divider";
+import Box from "@mui/material/Box";
 import { makeStyles } from "../utils/makesStyles";
+import { getColorsValue } from "./highlightEditor";
+import IconButton from "@mui/material/IconButton";
+import MoreVert from "@mui/icons-material/MoreVert";
+import Menu from "@mui/material/Menu";
+import MenuItem from "@mui/material/MenuItem";
 import type * as Prisma from "@prisma/client";
 
-const useStyles = makeStyles()(() => ({
+const useStyles = makeStyles()((theme) => ({
   title: {
     display: "flex",
     flexDirection: "row",
     alignItems: "center",
     flexGrow: 1,
   },
+  color: {
+    width: "0.7em",
+    height: "0.7em",
+    backgroundColor: "currentColor",
+    display: "inline-block",
+    marginRight: theme.spacing(1),
+    borderRadius: "50%",
+    border: "0.2em solid rgba(255, 255, 255, 0.9)",
+    boxSizing: "content-box",
+  },
 }));
 
-type BookmarkListItemProps = Prisma.Mark & {
-  onClick: (params: Prisma.Mark) => void;
-  onRemove: (mark: Prisma.Mark) => void;
+type HighlightListItemProps = Prisma.Mark & {
+  onClick: (mark: Prisma.Mark) => void;
+  onRemoveMark: (mark: Prisma.Mark) => void;
 };
 
-function BookmarkListItem(props: BookmarkListItemProps) {
-  const { title, selectedString, onClick, onRemove } = props;
+function HighlightListItem(props: HighlightListItemProps) {
+  const { color, selectedString, content, title, onClick, onRemoveMark } =
+    props;
   const { classes } = useStyles();
   const [menuAnchorEl, setMenuAnchorEl] = useState<HTMLElement>();
 
@@ -42,11 +54,18 @@ function BookmarkListItem(props: BookmarkListItemProps) {
   const removeBookmark = (e: React.MouseEvent<HTMLElement>) => {
     e.stopPropagation(); // for menu is in the button, clicking menu will trigger button again without stopPropagation
     setMenuAnchorEl(undefined);
-    onRemove(props);
+    onRemoveMark(props);
   };
 
-  const stopPropagation = (e: React.UIEvent<HTMLButtonElement>) =>
+  const stopRipplePropagation = (e: React.UIEvent<HTMLElement>) =>
     e.stopPropagation();
+
+  const comment = !content ? null : (
+    <>
+      <Typography variant="caption">comment</Typography>
+      <Typography variant="body1">{content}</Typography>
+    </>
+  );
 
   return (
     <ListItem
@@ -57,13 +76,17 @@ function BookmarkListItem(props: BookmarkListItemProps) {
       <Box p={1}>
         <Box display="flex" flexDirection="row">
           <Typography className={classes.title} variant="h6">
+            <span
+              className={classes.color}
+              style={{ color: getColorsValue(color) }}
+            />
             {title}
           </Typography>
           <IconButton
             color="inherit"
             onClick={menuOpen}
-            onMouseDown={stopPropagation}
-            onTouchStart={stopPropagation}
+            onMouseDown={stopRipplePropagation}
+            onTouchStart={stopRipplePropagation}
           >
             <MoreVert />
             <Menu
@@ -77,35 +100,39 @@ function BookmarkListItem(props: BookmarkListItemProps) {
           </IconButton>
         </Box>
         <Typography variant="body1">{selectedString}</Typography>
+        <br />
+        {comment}
       </Box>
       <Divider />
     </ListItem>
   );
 }
 
-type BookmarkListProps = {
-  onClick: (params: { epubcfi: string }) => void;
-  onRemove: (mark: Prisma.Mark) => void;
-  bookmarkList: Prisma.Mark[];
+type HighlightListProps = {
+  highlightList: Prisma.Mark[];
+  onClick: (mark: Prisma.Mark) => void;
+  // remove from server and rendition to remove mark
+  onRemoveMark: (mark: Prisma.Mark) => void;
 };
 
-export function BookmarkList(props: BookmarkListProps) {
-  const { onClick, bookmarkList, onRemove } = props;
+export function HighlightList(props: HighlightListProps) {
+  const { onClick, onRemoveMark, highlightList } = props;
 
   const list = useMemo(
     () => (
       <List>
-        {bookmarkList.map((item) => (
-          <BookmarkListItem
+        {highlightList.map((item) => (
+          <HighlightListItem
             key={item.id}
             {...item}
             onClick={onClick}
-            onRemove={onRemove}
+            onRemoveMark={onRemoveMark}
           />
         ))}
       </List>
     ),
-    [bookmarkList, onClick, onRemove],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [highlightList],
   );
 
   return list;

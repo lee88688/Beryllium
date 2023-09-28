@@ -30,8 +30,13 @@ export function getColorsValue(label: string) {
 type HighlightEditorProps = {
   color: string;
   content: string;
-  onConfirm: (params: Pick<HighlightEditorProps, "color" | "content">) => void;
-  onDelete: (params: Pick<HighlightEditorProps, "color" | "content">) => void;
+  epubcfi: string;
+  onConfirm: (
+    params: Pick<HighlightEditorProps, "color" | "content" | "epubcfi">,
+  ) => void;
+  onDelete: (
+    params: Pick<HighlightEditorProps, "color" | "content" | "epubcfi">,
+  ) => void;
   onCancel: (params: Pick<HighlightEditorProps, "color" | "content">) => void;
   onChange: (params: Pick<HighlightEditorProps, "color" | "content">) => void;
 };

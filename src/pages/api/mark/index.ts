@@ -2,27 +2,22 @@ import type { NextApiHandler } from "next";
 import { withSessionRoute } from "y/config";
 import { prisma } from "y/server/db";
 import { createSuccessRes } from "y/utils/apiResponse";
+import type * as Prisma from "@prisma/client";
 
-interface BookCurrentUpdateParam {
-  current: string;
-}
+export type GetMarkQuery = Partial<Pick<Prisma.Mark, "type" | "bookId">>;
 
 const handler: NextApiHandler = async (req, res) => {
   const userId = req.session.user.id;
-  const bookId = Number.parseInt(req.query.current as string);
-  const { current } = req.body as BookCurrentUpdateParam;
+  const query = req.query as unknown as GetMarkQuery;
 
-  await prisma.book.update({
+  const marks = await prisma.mark.findMany({
     where: {
-      id: bookId,
+      ...query,
       userId,
-    },
-    data: {
-      current,
     },
   });
 
-  return createSuccessRes(res, null);
+  return createSuccessRes(res, marks);
 };
 
 export default withSessionRoute(handler);
