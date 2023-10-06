@@ -1,5 +1,11 @@
 # Create T3 App
 
+how to development
+- create `.env` file, like `.env.example`
+- prisma
+  - `npx prisma db push`, push schema to db
+  - `npx prisma db seed`, seed db
+
 This is a [T3 Stack](https://create.t3.gg/) project bootstrapped with `create-t3-app`.
 
 ## What's next? How do I make an app with this?
