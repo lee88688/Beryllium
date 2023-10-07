@@ -9,6 +9,7 @@ import "@fontsource/roboto/300.css";
 import "@fontsource/roboto/400.css";
 import "@fontsource/roboto/500.css";
 import "@fontsource/roboto/700.css";
+import CssBaseline from "@mui/material/CssBaseline";
 
 const queryClient = new QueryClient();
 // https://mui.com/material-ui/guides/server-rendering/
@@ -19,6 +20,7 @@ const App: AppType = ({ Component, pageProps }) => {
     <QueryClientProvider client={queryClient}>
       <SnackbarProvider>
         <CacheProvider value={emotionCache}>
+          <CssBaseline />
           <Component {...pageProps} />
         </CacheProvider>
       </SnackbarProvider>

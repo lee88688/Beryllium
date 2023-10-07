@@ -7,7 +7,13 @@ const handler: NextApiHandler = async (req, res) => {
   const fileName = req.query.fileName as string;
   const filePath = (req.query.path as string[]).join("/");
 
-  const file = await readAsarFile(asarFileDir(fileName), filePath);
+  let file;
+  try {
+    file = await readAsarFile(asarFileDir(fileName), filePath);
+  } catch (e) {
+    return res.status(404).send("");
+  }
+
   const contentType = mime.lookup(filePath);
   if (contentType) {
     res.appendHeader("Content-Type", contentType);
