@@ -1,8 +1,7 @@
 import type { NextApiHandler } from "next";
 import { withSessionRoute } from "y/config";
-import { getTocPath, prisma } from "y/server/db";
-import { parseToc } from "y/server/service/epub";
-import { asarFileDir, readAsarFile } from "y/server/service/file";
+import { prisma } from "y/server/db";
+import { getBookToc } from "y/server/service/book";
 import { createFailRes, createSuccessRes } from "y/utils/apiResponse";
 
 const handler: NextApiHandler = async (req, res) => {
@@ -19,9 +18,8 @@ const handler: NextApiHandler = async (req, res) => {
     createFailRes(res, "book is not found!");
     return;
   }
-  const { href } = getTocPath(book);
-  const buffer = await readAsarFile(asarFileDir(book.fileName), href);
-  const toc = await parseToc(buffer.toString("utf8"));
+
+  const toc = await getBookToc(book);
 
   return createSuccessRes(res, toc);
 };

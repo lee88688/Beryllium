@@ -25,15 +25,16 @@ const useItemStyles = makeStyles<{ level?: number }>()(
   }),
 );
 
-type NestedItemData = {
+export type NestedItemData = {
   label: string;
+  src: string;
   children?: NestedItemData[];
 };
 
 type NestedListItemProps = {
   level: number;
   data: NestedItemData;
-  onClick: (params: { label: string; level: number }) => void;
+  onClick: (params: NestedItemData & { level: number }) => void;
 };
 
 function NestedListItem(props: NestedListItemProps) {

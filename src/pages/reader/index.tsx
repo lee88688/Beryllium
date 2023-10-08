@@ -22,6 +22,7 @@ import { type GetServerSidePropsResult, type GetServerSideProps } from "next";
 import { withSessionSsr } from "y/config";
 import { prisma } from "y/server/db";
 import groupBy from "lodash/groupBy";
+import { getBookToc } from "y/server/service/book";
 
 const useStyles = makeStyles()((theme) => ({
   root: { display: "flex", flexDirection: "row-reverse" },
@@ -78,6 +79,7 @@ const useStyles = makeStyles()((theme) => ({
 type ReaderProps = {
   highlights: Prisma.Mark[];
   bookmarks: Prisma.Mark[];
+  tocData: NestedItemData[];
 } & Pick<Prisma.Book, "title" | "current" | "fileName" | "contentPath">;
 
 export default function Reader(props: ReaderProps) {
@@ -148,7 +150,12 @@ export default function Reader(props: ReaderProps) {
           </Menu>
         </Toolbar>
       </AppBar>
-      <ReaderDrawer book={bookFileName} />
+      <ReaderDrawer
+        id={id}
+        tocData={props.tocData}
+        bookmarks={props.bookmarks}
+        highlights={props.highlights}
+      />
       <main className={classes.main}>
         <Toolbar />
         <div className={classes.content}>{bookItem}</div>
@@ -211,6 +218,8 @@ export const getServerSideProps: GetServerSideProps<ReaderProps> =
 
     const groups = groupBy(marks, "type");
 
+    const tocData = await getBookToc(book);
+
     return {
       props: {
         title: book.title,
@@ -219,6 +228,7 @@ export const getServerSideProps: GetServerSideProps<ReaderProps> =
         contentPath: book.contentPath,
         highlights: groups[MarkType.Highlight] ?? [],
         bookmarks: groups[MarkType.Bookmark] ?? [],
+        tocData,
       },
     };
   });

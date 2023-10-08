@@ -5,7 +5,7 @@ import AppBar from "@mui/material/AppBar";
 import Tabs from "@mui/material/Tabs";
 import Tab from "@mui/material/Tab";
 // import TabPanel from "@mui/material/TabPanel";
-import { NestedList } from "y/components/nestedList";
+import { type NestedItemData, NestedList } from "y/components/nestedList";
 import Hidden from "@mui/material/Hidden";
 import SwipeableDrawer from "@mui/material/SwipeableDrawer";
 import Drawer from "@mui/material/Drawer";
@@ -71,8 +71,8 @@ const useDrawerStyles = makeStyles()((theme) => ({
 }));
 
 type ReaderDrawerProps = {
-  id: string;
-  tocData: any[];
+  id: number;
+  tocData: NestedItemData[];
   bookmarks: Prisma.Mark[];
   highlights: Prisma.Mark[];
   onClickToc: () => void;
