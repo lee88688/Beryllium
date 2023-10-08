@@ -85,8 +85,6 @@ export function useReader({
     };
 
   useEffect(() => {
-    // const viewer = document.querySelector('#viewer');
-    // console.log(viewer.clientHeight);
     const book = ePub(opfUrl);
     rendition.current = book.renderTo("viewer", {
       manager: "continuous",
@@ -94,6 +92,7 @@ export function useReader({
       width: "100%",
       height: "100%",
       snap: true,
+      // allowScriptedContent: true,
       // FIXME: need to add
       // script: `${process.env.PUBLIC_URL}/epubjs-ext/rendition-injection.js`,
     });
@@ -218,7 +217,11 @@ export function useReader({
   return {
     bookItem,
     rendition,
-    nextPage: () => (rendition.current ? rendition.current.next() : null),
-    prevPage: () => (rendition.current ? rendition.current.prev() : null),
+    nextPage: () => {
+      return rendition.current?.next();
+    },
+    prevPage: () => {
+      return rendition.current?.prev();
+    },
   };
 }

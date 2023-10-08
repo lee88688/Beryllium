@@ -18,12 +18,10 @@ import truncate from "lodash/truncate";
 import { addMark } from "../clientApi";
 import type * as Prisma from "@prisma/client";
 import { MarkType } from "y/utils/constants";
-import { type GetServerSideProps } from "next";
+import { type GetServerSidePropsResult, type GetServerSideProps } from "next";
 import { withSessionSsr } from "y/config";
 import { prisma } from "y/server/db";
 import groupBy from "lodash/groupBy";
-
-export const ReaderContext = React.createContext({ rendition: {} });
 
 const useStyles = makeStyles()((theme) => ({
   root: { display: "flex", flexDirection: "row-reverse" },
@@ -43,7 +41,7 @@ const useStyles = makeStyles()((theme) => ({
     position: "relative",
     flexDirection: "column",
     height: "100vh",
-    "max-height": "100%",
+    maxHeight: "100%",
     overflow: "hidden",
     flexGrow: 1,
     padding: theme.spacing(3),
@@ -57,6 +55,7 @@ const useStyles = makeStyles()((theme) => ({
   },
   content: {
     flexGrow: 1,
+    overflow: "hidden",
   },
   pageIcon: {
     display: "none",
@@ -69,27 +68,27 @@ const useStyles = makeStyles()((theme) => ({
     },
   },
   next: {
-    right: `${theme.spacing(2)}px`,
+    right: theme.spacing(2),
   },
   prev: {
-    left: `${theme.spacing(2)}px`,
+    left: theme.spacing(2),
   },
 }));
 
 type ReaderProps = {
   highlights: Prisma.Mark[];
   bookmarks: Prisma.Mark[];
-};
+} & Pick<Prisma.Book, "title" | "current" | "fileName" | "contentPath">;
 
 export default function Reader(props: ReaderProps) {
   const { classes, cx } = useStyles();
   const router = useRouter();
   const query = router.query;
   const id = Number.parseInt(query.id as string);
-  const title = query.title as string;
-  const cfi = query.cfi as string;
-  const bookFileName = query.book as string;
-  const content = query.content as string;
+  const title = props.title;
+  const cfi = props.current;
+  const bookFileName = props.fileName;
+  const content = props.contentPath;
   const contentUrl = getFileUrl(bookFileName, content);
 
   const { bookItem, nextPage, prevPage, rendition } = useReader({
@@ -99,13 +98,6 @@ export default function Reader(props: ReaderProps) {
     startCfi: cfi,
   });
   const [menuAnchorEl, setMenuAnchorEl] = useState(null);
-
-  const contextValue = useMemo(
-    () => ({
-      rendition,
-    }),
-    [rendition],
-  );
 
   const menuOpen = (e) => setMenuAnchorEl(e.currentTarget);
   const menuClose = () => setMenuAnchorEl(null);
@@ -134,44 +126,42 @@ export default function Reader(props: ReaderProps) {
   };
 
   return (
-    <ReaderContext.Provider value={contextValue}>
-      <div className={classes.root}>
-        <AppBar position="fixed" className={classes.appBar}>
-          <Toolbar>
-            <IconButton edge="start" color="inherit" onClick={goBack}>
-              <ArrowBack />
-            </IconButton>
-            <Typography variant="h6" noWrap className={classes.appBarTitle}>
-              {title}
-            </Typography>
-            <IconButton edge="end" color="inherit" onClick={menuOpen}>
-              <MoreVert />
-            </IconButton>
-            <Menu
-              anchorEl={menuAnchorEl}
-              open={Boolean(menuAnchorEl)}
-              onClose={menuClose}
-              keepMounted
-            >
-              <MenuItem onClick={addBookmark}>add bookmark</MenuItem>
-            </Menu>
-          </Toolbar>
-        </AppBar>
-        <ReaderDrawer book={bookFileName} />
-        <main className={classes.main}>
-          <Toolbar />
-          <div className={classes.content}>{bookItem}</div>
-          <ArrowBackIosIcon
-            onClick={prevPage}
-            className={cx(classes.pageIcon, classes.prev)}
-          />
-          <ArrowForwardIosIcon
-            onClick={nextPage}
-            className={cx(classes.pageIcon, classes.next)}
-          />
-        </main>
-      </div>
-    </ReaderContext.Provider>
+    <div className={classes.root}>
+      <AppBar position="fixed" className={classes.appBar}>
+        <Toolbar>
+          <IconButton edge="start" color="inherit" onClick={goBack}>
+            <ArrowBack />
+          </IconButton>
+          <Typography variant="h6" noWrap className={classes.appBarTitle}>
+            {title}
+          </Typography>
+          <IconButton edge="end" color="inherit" onClick={menuOpen}>
+            <MoreVert />
+          </IconButton>
+          <Menu
+            anchorEl={menuAnchorEl}
+            open={Boolean(menuAnchorEl)}
+            onClose={menuClose}
+            keepMounted
+          >
+            <MenuItem onClick={addBookmark}>add bookmark</MenuItem>
+          </Menu>
+        </Toolbar>
+      </AppBar>
+      <ReaderDrawer book={bookFileName} />
+      <main className={classes.main}>
+        <Toolbar />
+        <div className={classes.content}>{bookItem}</div>
+        <ArrowBackIosIcon
+          onClick={prevPage}
+          className={cx(classes.pageIcon, classes.prev)}
+        />
+        <ArrowForwardIosIcon
+          onClick={nextPage}
+          className={cx(classes.pageIcon, classes.next)}
+        />
+      </main>
+    </div>
   );
 }
 
@@ -197,6 +187,21 @@ export const getServerSideProps: GetServerSideProps<ReaderProps> =
   withSessionSsr(async ({ req, query }) => {
     const userId = req.session.user.id;
     const bookId = Number.parseInt(query.id as string);
+    const book = await prisma.book.findFirst({
+      where: {
+        userId,
+        id: bookId,
+      },
+    });
+
+    if (!book)
+      return {
+        redirect: {
+          permanent: true,
+          destination: "/bookshelf",
+        },
+      } as GetServerSidePropsResult<ReaderProps>;
+
     const marks = await prisma.mark.findMany({
       where: {
         userId,
@@ -208,6 +213,10 @@ export const getServerSideProps: GetServerSideProps<ReaderProps> =
 
     return {
       props: {
+        title: book.title,
+        current: book.current,
+        fileName: book.fileName,
+        contentPath: book.contentPath,
         highlights: groups[MarkType.Highlight] ?? [],
         bookmarks: groups[MarkType.Bookmark] ?? [],
       },
