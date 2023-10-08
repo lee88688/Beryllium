@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useCallback } from "react";
 import { useRouter } from "next/router";
 import Typography from "@mui/material/Typography";
 import AppBar from "@mui/material/AppBar";
@@ -23,6 +23,10 @@ import { withSessionSsr } from "y/config";
 import { prisma } from "y/server/db";
 import groupBy from "lodash/groupBy";
 import { getBookToc } from "y/server/service/book";
+import {
+  type NestedItemData,
+  type NestedListItemClick,
+} from "y/components/nestedList";
 
 const useStyles = makeStyles()((theme) => ({
   root: { display: "flex", flexDirection: "row-reverse" },
@@ -105,8 +109,8 @@ export default function Reader(props: ReaderProps) {
   const menuClose = () => setMenuAnchorEl(null);
 
   const addBookmark = async () => {
-    const { start } = await rendition.current.currentLocation();
-    const range = rendition.current.getRange(start.cfi);
+    const { start } = await rendition.current?.currentLocation();
+    const range = rendition.current?.getRange(start.cfi);
     const title = getElementHeading(range.startContainer);
     menuClose();
     console.log("current cfi", start);
@@ -126,6 +130,20 @@ export default function Reader(props: ReaderProps) {
     console.log("current cfi", start);
     await apiUpdateBookCurrent(id, start.cfi as string);
   };
+
+  const handleTocClick = useCallback<NestedListItemClick>(
+    ({ src }) => {
+      return rendition.current?.display(src);
+    },
+    [rendition],
+  );
+
+  const handleHighlightClick = useCallback(
+    ({ epubcfi }: Pick<Prisma.Mark, "epubcfi">) => {
+      return rendition.current?.display(epubcfi);
+    },
+    [rendition],
+  );
 
   return (
     <div className={classes.root}>
@@ -155,6 +173,8 @@ export default function Reader(props: ReaderProps) {
         tocData={props.tocData}
         bookmarks={props.bookmarks}
         highlights={props.highlights}
+        onClickToc={handleTocClick}
+        onClickHighlight={handleHighlightClick}
       />
       <main className={classes.main}>
         <Toolbar />
@@ -204,7 +224,7 @@ export const getServerSideProps: GetServerSideProps<ReaderProps> =
     if (!book)
       return {
         redirect: {
-          permanent: true,
+          permanent: false,
           destination: "/bookshelf",
         },
       } as GetServerSidePropsResult<ReaderProps>;

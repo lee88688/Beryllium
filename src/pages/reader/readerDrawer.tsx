@@ -5,7 +5,11 @@ import AppBar from "@mui/material/AppBar";
 import Tabs from "@mui/material/Tabs";
 import Tab from "@mui/material/Tab";
 // import TabPanel from "@mui/material/TabPanel";
-import { type NestedItemData, NestedList } from "y/components/nestedList";
+import {
+  type NestedItemData,
+  NestedList,
+  type NestedListItemClick,
+} from "y/components/nestedList";
 import Hidden from "@mui/material/Hidden";
 import SwipeableDrawer from "@mui/material/SwipeableDrawer";
 import Drawer from "@mui/material/Drawer";
@@ -75,7 +79,7 @@ type ReaderDrawerProps = {
   tocData: NestedItemData[];
   bookmarks: Prisma.Mark[];
   highlights: Prisma.Mark[];
-  onClickToc: () => void;
+  onClickToc: NestedListItemClick;
   onClickHighlight: (params: { epubcfi: string }) => void;
   onRemoveMark: (mark: Prisma.Mark) => void;
 };

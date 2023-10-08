@@ -31,10 +31,14 @@ export type NestedItemData = {
   children?: NestedItemData[];
 };
 
+export type NestedListItemClick = (
+  params: NestedItemData & { level: number },
+) => void;
+
 type NestedListItemProps = {
   level: number;
   data: NestedItemData;
-  onClick: (params: NestedItemData & { level: number }) => void;
+  onClick: NestedListItemClick;
 };
 
 function NestedListItem(props: NestedListItemProps) {
@@ -109,7 +113,7 @@ function NestedListItem(props: NestedListItemProps) {
 
 type NestedListProps = {
   data: Array<NestedItemData>;
-  onClick: (params: { label: string; level: number }) => void;
+  onClick: NestedListItemClick;
 };
 
 export function NestedList(props: NestedListProps) {
