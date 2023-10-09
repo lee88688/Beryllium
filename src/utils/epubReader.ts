@@ -13,9 +13,20 @@ export class EpubReader extends EventEmitter<"selected" | "markClicked"> {
     const range = contents.window.getSelection()?.getRangeAt(0);
     if (!range) return;
 
-    const rect = range.getBoundingClientRect();
+    // in iframe viewport is the inner width and height
+    // https://developer.mozilla.org/en-US/docs/Web/CSS/Viewport_concepts
 
-    this.emit("selected", cfiRange, rect, contents);
+    const iframes = document.getElementsByTagName("iframe");
+    const iframe = Array.from(iframes).find(
+      (iframe) => iframe.contentWindow === contents.window,
+    );
+    if (!iframe) return;
+    const rect = range.getBoundingClientRect();
+    const iframeRect = iframe.getBoundingClientRect();
+    rect.x = rect.x + iframeRect.x;
+    rect.y = rect.y + iframeRect.y;
+
+    this.emit("selected", cfiRange, range, rect, contents);
   };
 
   handleMarkClicked = (
@@ -52,6 +63,14 @@ export class EpubReader extends EventEmitter<"selected" | "markClicked"> {
 
   display(target: string | number) {
     return this.rendition.display(target as string);
+  }
+
+  prev() {
+    return this.rendition.prev();
+  }
+
+  next() {
+    return this.rendition.next();
   }
 
   addHighlight(epubcfi: string, mark: Prisma.Mark) {
