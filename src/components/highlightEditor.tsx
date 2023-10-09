@@ -9,21 +9,32 @@ import { ColorRadio } from "./colorRadio";
 import Button from "@mui/material/Button";
 import { makeStyles } from "../utils/makesStyles";
 
-const colors = [
-  { label: "red", value: "#F44336" },
-  { label: "purple", value: "#9C27B0" },
-  { label: "blue", value: "#2196F3" },
-  { label: "cyan", value: "#00BCD4" },
-  { label: "teal", value: "#009688" },
-  { label: "orange", value: "#FF9800" },
-  { label: "blue-grey", value: "#607D8B" },
+export enum Colors {
+  Red = "red",
+  Purple = "purple",
+  Blue = "blue",
+  Cyan = "cyan",
+  Teal = "teal",
+  Orange = "orange",
+  BlueGrey = "blue-grey",
+}
+
+const colors: Array<{ label: Colors; value: string }> = [
+  { label: Colors.Red, value: "#F44336" },
+  { label: Colors.Purple, value: "#9C27B0" },
+  { label: Colors.Blue, value: "#2196F3" },
+  { label: Colors.Cyan, value: "#00BCD4" },
+  { label: Colors.Teal, value: "#009688" },
+  { label: Colors.Orange, value: "#FF9800" },
+  { label: Colors.BlueGrey, value: "#607D8B" },
 ];
 
-const colorsMap: Record<string, string> = colors.reduce(
+const colorsMap: Record<Colors, string> = colors.reduce(
   (acc, { label, value }) => ({ ...acc, [label]: value }),
-  {},
+  {} as Record<Colors, string>,
 );
-export function getColorsValue(label: string) {
+
+export function getColorsValue(label: Colors) {
   return colorsMap[label];
 }
 

@@ -8,8 +8,8 @@ const useStyles = makeStyles()(() => ({
     boxSizing: "content-box",
   },
   icon: {
-    width: "0.7em",
-    height: "0.7em",
+    width: "1em",
+    height: "1em",
     backgroundColor: "currentColor",
     borderRadius: "50%",
     backgroundClip: "content-box",

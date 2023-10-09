@@ -1,8 +1,12 @@
 import React, { useState, useRef, useEffect } from "react";
-import ePub, { type Rendition } from "epubjs";
+import ePub, { type Rendition, type Contents } from "epubjs";
 import { EpubCFI } from "epubjs";
 import Popover from "@mui/material/Popover";
-import { HighlightEditor, getColorsValue } from "y/components/highlightEditor";
+import {
+  Colors,
+  HighlightEditor,
+  getColorsValue,
+} from "y/components/highlightEditor";
 import { addMark, removeMark, updateMark } from "../clientApi";
 import { getElementHeading } from "./index";
 import type * as Prisma from "@prisma/client";
@@ -73,7 +77,7 @@ export function useReader({
         e.stopPropagation();
         return;
       }
-      const g = document.querySelector<SVGAElement>(
+      const g = document.querySelector<SVGGElement>(
         `g[data-epubcfi="${cfi}"]`,
       )!;
       const editorValue = { ...curEditorValueRef.current };
@@ -92,10 +96,12 @@ export function useReader({
       width: "100%",
       height: "100%",
       snap: true,
+      stylesheet: "/style.css",
       // allowScriptedContent: true,
       // FIXME: need to add
       // script: `${process.env.PUBLIC_URL}/epubjs-ext/rendition-injection.js`,
     });
+    console.log("rendition", rendition);
     // eslint-disable-next-line @typescript-eslint/no-floating-promises
     rendition.current.display(startCfi || 0);
 
@@ -106,11 +112,11 @@ export function useReader({
     // so it's important to change `curEditorValue` to `curEditorValueRef`.
     rendition.current.on(
       "selected",
-      function (cfiRange: string, contents: Window) {
+      function (cfiRange: string, contents: Contents) {
         if (!epubcfi) {
           const fn = async (e: MouseEvent) => {
             contents.document.removeEventListener("mouseup", fn);
-            const color = "red";
+            const color = Colors.Red;
             const content = "";
             // const cfi = epubcfi; // epubcfi will be set to null, save a copy.
             const title = getElementHeading(e.target);
@@ -130,10 +136,15 @@ export function useReader({
               "",
               { fill: getColorsValue(color) },
             );
+            // rendition.current?.annotations.mark(
+            //   epubcfi,
+            //   { ...curValue },
+            //   getHighlightSelectedFunction(epubcfi),
+            // );
             setCurEditorValue({ ...curValue });
-            const { data: markId } = await addMark(bookId, { ...curValue });
+            // const { data: markId } = await addMark(bookId, { ...curValue });
             // dispatch(getHighlightList(bookId)); // update highlight list
-            setCurEditorValue({ ...curValue, id: markId });
+            // setCurEditorValue({ ...curValue, id: markId });
             epubcfi = "";
             selectedString = "";
           };
@@ -143,6 +154,8 @@ export function useReader({
         selectedString = contents.window.getSelection()?.toString() ?? "";
       },
     );
+
+    rendition.current.on("markClicked", (...args) => console.log(...args));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [opfUrl]);
 
