@@ -207,7 +207,7 @@ export function getElementHeading(el: HTMLElement) {
       curEl = curEl.parentElement!;
     }
   }
-  return headingText;
+  return headingText ?? "";
 }
 
 export const getServerSideProps: GetServerSideProps<ReaderProps> =

@@ -20,14 +20,18 @@ const useStyles = makeStyles()((theme) => ({
     flexGrow: 1,
   },
   color: {
-    width: "0.7em",
-    height: "0.7em",
+    minWidth: "0.7em",
+    minHeight: "0.7em",
     backgroundColor: "currentColor",
     display: "inline-block",
     marginRight: theme.spacing(1),
     borderRadius: "50%",
     border: "0.2em solid rgba(255, 255, 255, 0.9)",
     boxSizing: "content-box",
+  },
+  titleContent: {
+    whiteSpace: "nowrap",
+    textOverflow: "ellipsis",
   },
 }));
 
@@ -80,7 +84,7 @@ function HighlightListItem(props: HighlightListItemProps) {
               className={classes.color}
               style={{ color: getColorsValue(color) }}
             />
-            {title}
+            <span className={classes.titleContent}>{title}</span>
           </Typography>
           <IconButton
             color="inherit"

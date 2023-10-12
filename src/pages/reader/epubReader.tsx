@@ -1,7 +1,7 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
 import ePub, { type Rendition, type Contents } from "epubjs";
 import { EpubCFI } from "epubjs";
-import Popover from "@mui/material/Popover";
+import Popper, { type PopperProps } from "@mui/material/Popper";
 import {
   Colors,
   HighlightEditor,
@@ -11,8 +11,11 @@ import { addMark, removeMark, updateMark } from "../clientApi";
 import { getElementHeading } from "./index";
 import type * as Prisma from "@prisma/client";
 import { MarkType } from "y/utils/constants";
+import { EpubReader } from "y/utils/epubReader";
 
 // window.EpubCFI = EpubCFI;
+
+type VirtualElement = Exclude<PopperProps["anchorEl"], null | undefined>;
 
 type UseReaderProps = {
   opfUrl: string;
@@ -21,12 +24,17 @@ type UseReaderProps = {
   highlightList: Prisma.Mark[];
 };
 
-type EditorValue = {
-  id: number;
-  color: string;
-  content: string;
-  epubcfi: string;
-};
+type EditorValue = Omit<Prisma.Mark, "id" | "userId"> & { id?: number };
+
+const EMPTY_EDITOR_VALUE = (bookId: number) => ({
+  color: "",
+  content: "",
+  epubcfi: "",
+  selectedString: "",
+  type: MarkType.Highlight,
+  title: "",
+  bookId,
+});
 
 export function useReader({
   opfUrl,
@@ -34,15 +42,14 @@ export function useReader({
   startCfi,
   highlightList,
 }: UseReaderProps) {
+  const epubReaderRef = useRef<EpubReader>();
+
   const rendition = useRef<Rendition>();
-  const anchorEl = useRef<HTMLElement>();
+  const anchorEl = useRef<VirtualElement>();
   const [openPopover, setOpenPopover] = useState(false);
-  const [curEditorValue, setCurEditorValue] = useState<EditorValue>({
-    id: 0,
-    color: "",
-    content: "",
-    epubcfi: "",
-  });
+  const [curEditorValue, setCurEditorValue] = useState<EditorValue>(
+    EMPTY_EDITOR_VALUE(bookId),
+  );
   const curEditorValueRef = useRef<EditorValue>(curEditorValue);
   const preEditorValue = useRef(curEditorValue);
 
@@ -84,106 +91,150 @@ export function useReader({
       Object.keys(g.dataset).forEach((k) => (editorValue[k] = g.dataset[k]));
       preEditorValue.current = { ...editorValue };
       setCurEditorValue(editorValue);
-      anchorEl.current = e.target as HTMLElement;
+      anchorEl.current = e.target as unknown as VirtualElement;
       setOpenPopover(true);
     };
 
-  useEffect(() => {
-    const book = ePub(opfUrl);
-    rendition.current = book.renderTo("viewer", {
-      manager: "continuous",
-      flow: "paginated",
-      width: "100%",
-      height: "100%",
-      snap: true,
-      stylesheet: "/style.css",
-      // allowScriptedContent: true,
-      // FIXME: need to add
-      // script: `${process.env.PUBLIC_URL}/epubjs-ext/rendition-injection.js`,
-    });
-    console.log("rendition", rendition);
-    // eslint-disable-next-line @typescript-eslint/no-floating-promises
-    rendition.current.display(startCfi || 0);
-
-    let epubcfi = "";
-    let selectedString = "";
-    // when registered selected event, all references in selected callback function are frozen
-    // curEditorValue will be changed, and it would not change in selected callback.
-    // so it's important to change `curEditorValue` to `curEditorValueRef`.
-    rendition.current.on(
-      "selected",
-      function (cfiRange: string, contents: Contents) {
-        if (!epubcfi) {
-          const fn = async (e: MouseEvent) => {
-            contents.document.removeEventListener("mouseup", fn);
-            const color = Colors.Red;
-            const content = "";
-            // const cfi = epubcfi; // epubcfi will be set to null, save a copy.
-            const title = getElementHeading(e.target);
-            console.log(title);
-            const curValue = {
-              color,
-              content,
-              epubcfi,
-              selectedString,
-              type: MarkType.Highlight,
-              title,
-            };
-            rendition.current?.annotations.highlight(
-              epubcfi,
-              { ...curValue },
-              getHighlightSelectedFunction(epubcfi),
-              "",
-              { fill: getColorsValue(color) },
-            );
-            // rendition.current?.annotations.mark(
-            //   epubcfi,
-            //   { ...curValue },
-            //   getHighlightSelectedFunction(epubcfi),
-            // );
-            setCurEditorValue({ ...curValue });
-            // const { data: markId } = await addMark(bookId, { ...curValue });
-            // dispatch(getHighlightList(bookId)); // update highlight list
-            // setCurEditorValue({ ...curValue, id: markId });
-            epubcfi = "";
-            selectedString = "";
-          };
-          contents.document.addEventListener("mouseup", fn);
-        }
-        epubcfi = cfiRange;
-        selectedString = contents.window.getSelection()?.toString() ?? "";
-      },
-    );
-
-    rendition.current.on("markClicked", (...args) => console.log(...args));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [opfUrl]);
-
-  useEffect(() => {
-    if (openPopover && curEditorValue.epubcfi) {
-      // find the highlight element and compare with the color before. if not the same, change element's color.
-      updateHighlightElement(curEditorValue);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [curEditorValue.color]);
-
-  useEffect(() => {
-    if (!rendition.current || !Array.isArray(highlightList)) return;
-    const { annotations } = rendition.current;
-    if (Object.keys(annotations._annotations).length !== 0) return;
-    highlightList.forEach((item) => {
-      const { epubcfi, color } = item;
-      annotations.highlight(
-        epubcfi,
-        { ...item },
-        getHighlightSelectedFunction(epubcfi),
-        "",
-        { fill: getColorsValue(color) },
+  const handleSelected = useCallback(
+    (epubcfi: string, range: Range, rect: DOMRect, contents: Contents) => {
+      const handleSelectionChange = () => {
+        contents.window.removeEventListener(
+          "selectionchange",
+          handleSelectionChange,
+        );
+        anchorEl.current = undefined;
+        setOpenPopover(false);
+        setCurEditorValue(EMPTY_EDITOR_VALUE(bookId));
+      };
+      contents.window.addEventListener(
+        "selectionchange",
+        handleSelectionChange,
       );
+
+      anchorEl.current = {
+        nodeType: 1,
+        getBoundingClientRect: () => rect,
+      };
+
+      const title = getElementHeading(
+        range.commonAncestorContainer as HTMLElement,
+      );
+
+      setCurEditorValue((val) => {
+        return {
+          ...val,
+          epubcfi,
+          selectedString: range.toString(),
+          type: MarkType.Highlight,
+          title,
+        };
+      });
+      setOpenPopover(true);
+    },
+    [bookId],
+  );
+
+  useEffect(() => {
+    epubReaderRef.current = new EpubReader(opfUrl, "viewer");
+    void epubReaderRef.current.display(startCfi);
+    epubReaderRef.current.on("selected", handleSelected);
+  }, []);
+
+  // useEffect(() => {
+  //   const book = ePub(opfUrl);
+  //   rendition.current = book.renderTo("viewer", {
+  //     manager: "continuous",
+  //     flow: "paginated",
+  //     width: "100%",
+  //     height: "100%",
+  //     snap: true,
+  //     stylesheet: "/style.css",
+  //     // allowScriptedContent: true,
+  //     // FIXME: need to add
+  //     // script: `${process.env.PUBLIC_URL}/epubjs-ext/rendition-injection.js`,
+  //   });
+  //   console.log("rendition", rendition);
+  //   // eslint-disable-next-line @typescript-eslint/no-floating-promises
+  //   rendition.current.display(startCfi || 0);
+
+  //   let epubcfi = "";
+  //   let selectedString = "";
+  //   // when registered selected event, all references in selected callback function are frozen
+  //   // curEditorValue will be changed, and it would not change in selected callback.
+  //   // so it's important to change `curEditorValue` to `curEditorValueRef`.
+  //   rendition.current.on(
+  //     "selected",
+  //     function (cfiRange: string, contents: Contents) {
+  //       if (!epubcfi) {
+  //         const fn = async (e: MouseEvent) => {
+  //           contents.document.removeEventListener("mouseup", fn);
+  //           const color = Colors.Red;
+  //           const content = "";
+  //           // const cfi = epubcfi; // epubcfi will be set to null, save a copy.
+  //           const title = getElementHeading(e.target);
+  //           console.log(title);
+  //           const curValue = {
+  //             color,
+  //             content,
+  //             epubcfi,
+  //             selectedString,
+  //             type: MarkType.Highlight,
+  //             title,
+  //           };
+  //           rendition.current?.annotations.highlight(
+  //             epubcfi,
+  //             { ...curValue },
+  //             getHighlightSelectedFunction(epubcfi),
+  //             "",
+  //             { fill: getColorsValue(color) },
+  //           );
+  //           // rendition.current?.annotations.mark(
+  //           //   epubcfi,
+  //           //   { ...curValue },
+  //           //   getHighlightSelectedFunction(epubcfi),
+  //           // );
+  //           setCurEditorValue({ ...curValue });
+  //           // const { data: markId } = await addMark(bookId, { ...curValue });
+  //           // dispatch(getHighlightList(bookId)); // update highlight list
+  //           // setCurEditorValue({ ...curValue, id: markId });
+  //           epubcfi = "";
+  //           selectedString = "";
+  //         };
+  //         contents.document.addEventListener("mouseup", fn);
+  //       }
+  //       epubcfi = cfiRange;
+  //       selectedString = contents.window.getSelection()?.toString() ?? "";
+  //     },
+  //   );
+
+  //   rendition.current.on("markClicked", (...args) => console.log(...args));
+  //   // eslint-disable-next-line react-hooks/exhaustive-deps
+  // }, [opfUrl]);
+
+  // useEffect(() => {
+  //   if (openPopover && curEditorValue.epubcfi) {
+  //     // find the highlight element and compare with the color before. if not the same, change element's color.
+  //     updateHighlightElement(curEditorValue);
+  //   }
+  //   // eslint-disable-next-line react-hooks/exhaustive-deps
+  // }, [curEditorValue.color]);
+
+  useEffect(() => {
+    highlightList.forEach((item) => {
+      epubReaderRef.current?.addHighlight(item);
     });
   }, [highlightList]);
 
-  const handleEditorChange = (value) => setCurEditorValue(value);
+  const handleEditorChange = useCallback((value: EditorValue) => {
+    if (!value.id) {
+      // create new highlight
+      console.log("current editor value", value);
+      addMark({ ...value })
+        .then((res) => setCurEditorValue((val) => ({ ...val, id: res.data })))
+        .catch((e) => console.error(e));
+    }
+    setCurEditorValue(value);
+  }, []);
 
   const handleEditorCancel = () => {
     // canceling will remove changes
@@ -210,12 +261,7 @@ export function useReader({
   const bookItem = (
     <React.Fragment>
       <div id="viewer" style={{ height: "100%", width: "100%" }}></div>
-      <Popover
-        open={openPopover}
-        anchorEl={anchorEl.current}
-        onClose={handleEditorCancel}
-        anchorOrigin={{ vertical: "bottom", horizontal: "left" }}
-      >
+      <Popper open={openPopover} anchorEl={anchorEl.current} placement="top">
         <HighlightEditor
           {...curEditorValue}
           onChange={handleEditorChange}
@@ -223,7 +269,7 @@ export function useReader({
           onCancel={handleEditorCancel}
           onDelete={handleRemove}
         />
-      </Popover>
+      </Popper>
     </React.Fragment>
   );
 
@@ -231,10 +277,10 @@ export function useReader({
     bookItem,
     rendition,
     nextPage: () => {
-      return rendition.current?.next();
+      return epubReaderRef.current?.next();
     },
     prevPage: () => {
-      return rendition.current?.prev();
+      return epubReaderRef.current?.prev();
     },
   };
 }

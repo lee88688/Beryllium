@@ -73,10 +73,10 @@ export class EpubReader extends EventEmitter<"selected" | "markClicked"> {
     return this.rendition.next();
   }
 
-  addHighlight(epubcfi: string, mark: Prisma.Mark) {
+  addHighlight(mark: Prisma.Mark) {
     // TODO: inject css instead of use css, use theme to inject.
     this.rendition.annotations.highlight(
-      epubcfi,
+      mark.epubcfi,
       pick(mark, "id", "color"),
       undefined,
       undefined,

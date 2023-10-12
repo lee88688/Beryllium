@@ -5,7 +5,7 @@ import { createFailRes, createSuccessRes } from "y/utils/apiResponse";
 import type * as Prisma from "@prisma/client";
 import { userHasBook } from "y/server/service/book";
 
-export type CreateMarkParams = Omit<Prisma.Mark, "id">;
+export type CreateMarkParams = Omit<Prisma.Mark, "id" | "userId">;
 
 const handler: NextApiHandler = async (req, res) => {
   const params = req.body as CreateMarkParams;
@@ -16,11 +16,11 @@ const handler: NextApiHandler = async (req, res) => {
     return;
   }
 
-  await prisma.mark.create({
-    data: params,
+  const mark = await prisma.mark.create({
+    data: { ...params, userId },
   });
 
-  createSuccessRes(res, null);
+  createSuccessRes(res, mark.id);
 };
 
 export default withSessionRoute(handler);

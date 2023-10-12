@@ -59,7 +59,7 @@ export function getMark(query: GetMarkQuery) {
 }
 
 export function addMark(params: CreateMarkParams) {
-  return post("/api/mark/create", params);
+  return post<number>("/api/mark/create", params);
 }
 
 export function removeMark(id: number) {

@@ -38,19 +38,28 @@ export function getColorsValue(label: Colors) {
   return colorsMap[label];
 }
 
-type HighlightEditorProps = {
+type HighlightEditorProps<T extends Record<string, unknown>> = {
+  id?: number;
   color: string;
   content: string;
   epubcfi: string;
-  onConfirm: (
-    params: Pick<HighlightEditorProps, "color" | "content" | "epubcfi">,
-  ) => void;
+  onConfirm: (params: HighlightEditorValue<T>) => void;
   onDelete: (
-    params: Pick<HighlightEditorProps, "color" | "content" | "epubcfi">,
+    params: Pick<HighlightEditorProps<T>, "color" | "content" | "epubcfi"> & T,
   ) => void;
-  onCancel: (params: Pick<HighlightEditorProps, "color" | "content">) => void;
-  onChange: (params: Pick<HighlightEditorProps, "color" | "content">) => void;
+  onCancel: (
+    params: Pick<HighlightEditorProps<T>, "color" | "content">,
+  ) => void;
+  onChange: (
+    params: Pick<HighlightEditorProps<T>, "color" | "content" | "epubcfi"> & T,
+  ) => void;
 };
+
+type HighlightEditorValue<T extends Record<string, unknown>> = Pick<
+  HighlightEditorProps<T>,
+  "color" | "content" | "epubcfi"
+> &
+  T;
 
 const useStyles = makeStyles()(() => ({
   root: {
@@ -74,7 +83,9 @@ const useStyles = makeStyles()(() => ({
   },
 }));
 
-export function HighlightEditor(props: HighlightEditorProps) {
+export function HighlightEditor<T extends Record<string, unknown>>(
+  props: HighlightEditorProps<T>,
+) {
   const { onChange, onCancel, onDelete, onConfirm, ...otherProps } = props;
   const { classes } = useStyles();
   const [{ color, content }, setEditorContent] = useState({
@@ -91,13 +102,21 @@ export function HighlightEditor(props: HighlightEditorProps) {
       return (e: React.ChangeEvent<HTMLInputElement>) => {
         setEditorContent({ color: e.target.value, content });
         isFunction(onChange) &&
-          onChange({ ...otherProps, color: e.target.value, content });
+          onChange({
+            ...otherProps,
+            color: e.target.value,
+            content,
+          } as HighlightEditorValue<T>);
       };
     } else if (type === "text") {
       return (e: React.ChangeEvent<HTMLInputElement>) => {
         setEditorContent({ color, content: e.target.value });
         isFunction(onChange) &&
-          onChange({ ...otherProps, color, content: e.target.value });
+          onChange({
+            ...otherProps,
+            color,
+            content: e.target.value,
+          } as HighlightEditorValue<T>);
       };
     }
   };
@@ -131,6 +150,7 @@ export function HighlightEditor(props: HighlightEditorProps) {
         multiline
         classes={{ root: classes.input }}
         placeholder="comment"
+        disabled={!props.id}
       />
       <Divider />
       <div className={classes.actions}>
@@ -138,7 +158,12 @@ export function HighlightEditor(props: HighlightEditorProps) {
           key="confirm"
           color="primary"
           onClick={() => {
-            isFunction(onConfirm) && onConfirm({ ...props, color, content });
+            isFunction(onConfirm) &&
+              onConfirm({
+                ...otherProps,
+                color,
+                content,
+              } as HighlightEditorValue<T>);
           }}
         >
           confirm
@@ -147,7 +172,12 @@ export function HighlightEditor(props: HighlightEditorProps) {
           key="delete"
           color="secondary"
           onClick={() => {
-            isFunction(onDelete) && onDelete({ ...props, color, content });
+            isFunction(onDelete) &&
+              onDelete({
+                ...otherProps,
+                color,
+                content,
+              } as HighlightEditorValue<T>);
           }}
         >
           delete
