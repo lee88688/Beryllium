@@ -18,6 +18,7 @@ const useStyles = makeStyles()((theme) => ({
     flexDirection: "row",
     alignItems: "center",
     flexGrow: 1,
+    overflow: "hidden",
   },
   color: {
     minWidth: "0.7em",
@@ -32,6 +33,7 @@ const useStyles = makeStyles()((theme) => ({
   titleContent: {
     whiteSpace: "nowrap",
     textOverflow: "ellipsis",
+    overflow: "hidden",
   },
 }));
 
