@@ -9,7 +9,7 @@ import ArrowBackIosIcon from "@mui/icons-material/ArrowBackIos";
 import ArrowBack from "@mui/icons-material/ArrowBack";
 import { makeStyles } from "y/utils/makesStyles";
 import { useReader } from "./epubReader";
-import { apiUpdateBookCurrent, getFileUrl } from "../clientApi";
+import { apiUpdateBookCurrent, getFileUrl, getMark } from "../clientApi";
 import { ReaderDrawer, drawerWidth, viewBreakPoint } from "./readerDrawer";
 import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
@@ -27,6 +27,7 @@ import {
   type NestedItemData,
   type NestedListItemClick,
 } from "y/components/nestedList";
+import { useQuery } from "@tanstack/react-query";
 
 const useStyles = makeStyles()((theme) => ({
   root: { display: "flex", flexDirection: "row-reverse" },
@@ -97,11 +98,25 @@ export default function Reader(props: ReaderProps) {
   const content = props.contentPath;
   const contentUrl = getFileUrl(bookFileName, content);
 
+  const highlightListQuery = useQuery({
+    queryKey: ["getMark", id, MarkType.Highlight] as const,
+    queryFn: () =>
+      getMark({ bookId: id, type: MarkType.Highlight }).then((res) => res.data),
+    initialData: props.highlights,
+  });
+
+  const highlightList = highlightListQuery.data;
+
+  const refetchHighlightList = useCallback(() => {
+    return highlightListQuery.refetch();
+  }, []);
+
   const { bookItem, nextPage, prevPage, rendition } = useReader({
-    highlightList: props.highlights,
+    highlightList,
     opfUrl: contentUrl,
     bookId: id,
     startCfi: cfi,
+    onHighlightRefetch: refetchHighlightList,
   });
   const [menuAnchorEl, setMenuAnchorEl] = useState(null);
 
@@ -172,7 +187,7 @@ export default function Reader(props: ReaderProps) {
         id={id}
         tocData={props.tocData}
         bookmarks={props.bookmarks}
-        highlights={props.highlights}
+        highlights={highlightList}
         onClickToc={handleTocClick}
         onClickHighlight={handleHighlightClick}
       />

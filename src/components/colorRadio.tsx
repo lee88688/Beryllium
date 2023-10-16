@@ -17,7 +17,7 @@ const useStyles = makeStyles()(() => ({
   },
   checkedIcon: {
     backgroundClip: "border-box",
-    border: "0.3em solid rgba(255, 255, 255, 0.9)",
+    border: "0.3em solid rgba(255, 255, 255, 0.75)",
   },
 }));
 

@@ -9,6 +9,9 @@ export type GetMarkQuery = Partial<Pick<Prisma.Mark, "type" | "bookId">>;
 const handler: NextApiHandler = async (req, res) => {
   const userId = req.session.user.id;
   const query = req.query as unknown as GetMarkQuery;
+  if (query.bookId) {
+    query.bookId = Number(query.bookId);
+  }
 
   const marks = await prisma.mark.findMany({
     where: {

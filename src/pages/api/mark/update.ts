@@ -7,7 +7,7 @@ import omit from "lodash/omit";
 import { userHasMark } from "y/server/service/mark";
 
 export type UpdateMarkParams = Pick<Prisma.Mark, "id"> &
-  Partial<Omit<Prisma.Mark, "id" | "bookId">>;
+  Partial<Omit<Prisma.Mark, "id" | "bookId" | "userId">>;
 
 const handler: NextApiHandler = async (req, res) => {
   const userId = req.session.user.id;
@@ -20,6 +20,7 @@ const handler: NextApiHandler = async (req, res) => {
   await prisma.mark.update({
     where: {
       id: params.id,
+      userId,
     },
     data: omit(params, "id"),
   });

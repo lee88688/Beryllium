@@ -1,4 +1,7 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 import ePub, { type Rendition, type Contents, type Book } from "epubjs";
+import { type Annotation } from "epubjs/types/annotations";
 import type * as Prisma from "@prisma/client";
 import EventEmitter from "eventemitter3";
 import { type Colors, getColorsValue } from "y/components/highlightEditor";
@@ -73,7 +76,7 @@ export class EpubReader extends EventEmitter<"selected" | "markClicked"> {
     return this.rendition.next();
   }
 
-  addHighlight(mark: Prisma.Mark) {
+  addHighlight(mark: Omit<Prisma.Mark, "userId">) {
     // TODO: inject css instead of use css, use theme to inject.
     this.rendition.annotations.highlight(
       mark.epubcfi,
@@ -88,5 +91,30 @@ export class EpubReader extends EventEmitter<"selected" | "markClicked"> {
 
   removeHighlight(epubcfi: string) {
     this.rendition.annotations.remove(epubcfi, EpubAnnotationType.Highlight);
+  }
+
+  updateHighlight(mark: Pick<Prisma.Mark, "epubcfi" | "color">) {
+    const annotations = (this.rendition.annotations as any)
+      ._annotations as Record<string, Annotation>;
+
+    const hash = encodeURI(mark.epubcfi) + EpubAnnotationType.Highlight;
+    const current = annotations[hash];
+    if (!current || (current as any).data.color === mark.color) return;
+
+    (current as any).data.color = mark.color;
+    (current as any).styles = {
+      fill: getColorsValue(mark.color as Colors),
+    };
+
+    const g = document.querySelector<SVGGElement>(
+      `g[data-epubcfi="${mark.epubcfi}"]`,
+    );
+    if (!g) {
+      console.warn(`${mark.epubcfi} element is not found!`);
+      return;
+    }
+
+    g.dataset.color = mark.color;
+    g.setAttribute("fill", getColorsValue(mark.color as Colors)!);
   }
 }
