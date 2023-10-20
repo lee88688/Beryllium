@@ -6,6 +6,8 @@ import Toolbar from "@mui/material/Toolbar";
 import IconButton from "@mui/material/IconButton";
 import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
 import ArrowBackIosIcon from "@mui/icons-material/ArrowBackIos";
+import BookmarkBorderIcon from "@mui/icons-material/BookmarkBorder";
+import MenuOpenIcon from "@mui/icons-material/MenuOpen";
 import ArrowBack from "@mui/icons-material/ArrowBack";
 import { makeStyles } from "y/utils/makesStyles";
 import { useReader } from "./epubReader";
@@ -141,6 +143,8 @@ export default function Reader(props: ReaderProps) {
   const menuOpen = (e) => setMenuAnchorEl(e.currentTarget);
   const menuClose = () => setMenuAnchorEl(null);
 
+  const [drawerOpen, setDrawerOpen] = useState(false);
+
   const addBookmark = async () => {
     if (!epubReaderRef.current) return;
 
@@ -150,7 +154,6 @@ export default function Reader(props: ReaderProps) {
     const title = range.startContainer
       ? getElementHeading(range.startContainer as HTMLElement)
       : "";
-    menuClose();
     console.log("current cfi", location);
     await addMark({
       bookId: id,
@@ -207,8 +210,15 @@ export default function Reader(props: ReaderProps) {
           <Typography variant="h6" noWrap className={classes.appBarTitle}>
             {title}
           </Typography>
-          <IconButton edge="end" color="inherit" onClick={menuOpen}>
-            <MoreVert />
+          <IconButton edge="end" color="inherit" onClick={addBookmark}>
+            <BookmarkBorderIcon />
+          </IconButton>
+          <IconButton
+            edge="end"
+            color="inherit"
+            onClick={() => setDrawerOpen(true)}
+          >
+            <MenuOpenIcon />
           </IconButton>
           <Menu
             anchorEl={menuAnchorEl}
@@ -222,9 +232,11 @@ export default function Reader(props: ReaderProps) {
       </AppBar>
       <ReaderDrawer
         id={id}
+        open={drawerOpen}
         tocData={props.tocData}
         bookmarks={bookmarkList}
         highlights={highlightList}
+        onDrawerClose={() => setDrawerOpen(false)}
         onClickToc={handleTocClick}
         onClickHighlight={handleHighlightClick}
         onRemoveMark={handleRemoveMark}

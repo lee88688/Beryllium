@@ -76,9 +76,11 @@ const useDrawerStyles = makeStyles()((theme) => ({
 
 type ReaderDrawerProps = {
   id: number;
+  open: boolean;
   tocData: NestedItemData[];
   bookmarks: Prisma.Mark[];
   highlights: Prisma.Mark[];
+  onDrawerClose: () => void;
   onClickToc: NestedListItemClick;
   onClickHighlight: (params: { epubcfi: string }) => void;
   onRemoveMark: (mark: Prisma.Mark) => void;
@@ -86,9 +88,11 @@ type ReaderDrawerProps = {
 
 export function ReaderDrawer(props: ReaderDrawerProps) {
   const {
+    open,
     tocData,
     bookmarks,
     highlights,
+    onDrawerClose,
     onClickToc,
     onClickHighlight,
     onRemoveMark,
@@ -144,14 +148,13 @@ export function ReaderDrawer(props: ReaderDrawerProps) {
   return (
     <nav className={classes.root} aria-label="mailbox folders">
       {/* The implementation can be swapped with js to avoid SEO duplication of links. */}
-      <Hidden smUp>
-        <SwipeableDrawer
+      <Hidden mdUp>
+        <Drawer
           container={container}
           variant="temporary"
           anchor="right"
-          open={mobileOpen}
-          onClose={() => setMobileOpen(false)}
-          onOpen={() => setMobileOpen(true)}
+          open={open}
+          onClose={onDrawerClose}
           classes={{
             paper: classes.drawerPaper,
           }}
@@ -160,9 +163,9 @@ export function ReaderDrawer(props: ReaderDrawerProps) {
           }}
         >
           {drawer}
-        </SwipeableDrawer>
+        </Drawer>
       </Hidden>
-      <Hidden xsDown>
+      <Hidden smDown>
         <Drawer
           classes={{
             paper: classes.drawerPaper,

@@ -197,7 +197,7 @@ export function useReader({
   const bookItem = (
     <React.Fragment>
       <div id="viewer" style={{ height: "100%", width: "100%" }}></div>
-      <Popper open={openPopover} anchorEl={anchorEl.current} placement="top">
+      <Popper open={openPopover} anchorEl={anchorEl.current} placement="bottom">
         <HighlightEditor
           {...curEditorValue}
           onChange={handleEditorChange}
