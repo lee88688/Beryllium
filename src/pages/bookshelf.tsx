@@ -1,8 +1,9 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useMemo } from "react";
 import { useRouter } from "next/router";
 import Divider from "@mui/material/Divider";
 import List from "@mui/material/List";
 import ListItem from "@mui/material/ListItem";
+import ListItemButton from "@mui/material/ListItemButton";
 import ListItemText from "@mui/material/ListItemText";
 import ListSubheader from "@mui/material/ListSubheader";
 import AppBar from "@mui/material/AppBar";
@@ -10,7 +11,7 @@ import Toolbar from "@mui/material/Toolbar";
 import IconButton from "@mui/material/IconButton";
 import MenuIcon from "@mui/icons-material/Menu";
 import Typography from "@mui/material/Typography";
-import { Box, Hidden } from "@mui/material";
+import { Box, Hidden, SwipeableDrawer } from "@mui/material";
 import Drawer from "@mui/material/Drawer";
 import ImageListItem from "@mui/material/ImageListItem";
 import ImageListItemBar from "@mui/material/ImageListItemBar";
@@ -26,7 +27,7 @@ import DialogContent from "@mui/material/DialogContent";
 import DialogActions from "@mui/material/DialogActions";
 import Button from "@mui/material/Button";
 import TextField from "@mui/material/TextField";
-import { apiDeleteBook, apiGetBookCurrent, uploadBook } from "./clientApi";
+import { apiCreateCategory, apiDeleteBook, apiGetBookCurrent, apiGetCategory, uploadBook } from "./clientApi";
 import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
 import MoreVert from "@mui/icons-material/MoreVert";
@@ -42,6 +43,8 @@ import { apiRemoveBooksFromCategory } from "./clientApi";
 import { apiAddBooksToCategory } from "./clientApi";
 import { useSnackbar } from "notistack";
 import { makeStyles } from "../utils/makesStyles";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import noop from 'lodash/noop'
 
 const BOOK_HEIGHT = 240;
 const BOOK_WIDTH = 150;
@@ -122,6 +125,7 @@ function BookShelfItem(props: BookShelfItemProps) {
           classes={{
             root: classes.tile,
           }}
+          style={{ height: '100%' }}
         >
           <img
             src={getFileUrl(book.fileName, book.cover)}
@@ -208,8 +212,9 @@ function BookList(props: BookListProps) {
 
   const { classes } = useGridStyles();
 
-  const currentCategories =
-    categories.find((item) => category !== item.id)?.categoryBook ?? [];
+  const currentCategories = useMemo(() => {
+    return categories.filter((item) => category !== item.id) ?? [];
+  }, [categories, category])
 
   const bookClick = (
     id: number,
@@ -340,13 +345,12 @@ function BookList(props: BookListProps) {
         <DialogTitle>选择类别</DialogTitle>
         <List>
           {currentCategories.map((item) => (
-            <ListItem
+            <ListItemButton
               key={item.id}
-              button
-              onClick={handleCategorySelected(item.categoryId)}
+              onClick={handleCategorySelected(item.id)}
             >
-              <ListItemText primary={item.categoryId} />
-            </ListItem>
+              <ListItemText primary={item.name} />
+            </ListItemButton>
           ))}
         </List>
       </Dialog>
@@ -397,10 +401,14 @@ function useDrawer(props: UseDrawerProps) {
   const [categoryName, setCategoryName] = useState("");
   const categories = props.categories;
   const selectedCategory = props.selected;
-  // const { enqueueSnackbar } = useSnackbar();
+  const { enqueueSnackbar } = useSnackbar();
   const router = useRouter();
 
   const { classes } = useDrawerStyles();
+
+  const createCategoryMutation = useMutation({
+    mutationFn: (name: string) => apiCreateCategory({ name }),
+  })
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
@@ -425,8 +433,7 @@ function useDrawer(props: UseDrawerProps) {
         <ListItem>
           <Typography variant="h5">Beryllium</Typography>
         </ListItem>
-        <ListItem
-          button
+        <ListItemButton
           selected={!selectedCategory}
           onClick={handleCategoryClick(0)}
         >
@@ -434,13 +441,12 @@ function useDrawer(props: UseDrawerProps) {
             <BookIcon />
           </ListItemIcon>
           <ListItemText primary="我的书籍" />
-        </ListItem>
+        </ListItemButton>
       </List>
       <Divider />
       <List subheader={<ListSubheader>分类</ListSubheader>}>
         {categories.map((item) => (
-          <ListItem
-            button
+          <ListItemButton
             key={item.id}
             onClick={handleCategoryClick(item.id)}
             selected={item.id === selectedCategory}
@@ -449,10 +455,9 @@ function useDrawer(props: UseDrawerProps) {
               <LabelIcon />
             </ListItemIcon>
             <ListItemText primary={item.name} />
-          </ListItem>
+          </ListItemButton>
         ))}
-        <ListItem
-          button
+        <ListItemButton
           onClick={() => {
             setCategoryDialog(true);
             setMobileOpen(false);
@@ -462,7 +467,7 @@ function useDrawer(props: UseDrawerProps) {
             <AddIcon />
           </ListItemIcon>
           <ListItemText primary="创建分类" />
-        </ListItem>
+        </ListItemButton>
       </List>
       <Divider />
       <List>
@@ -472,27 +477,27 @@ function useDrawer(props: UseDrawerProps) {
           </ListItemIcon>
           <ListItemText primary="设置" />
         </ListItem>
-        <ListItem button className={classes.exitListItem} onClick={exitClick}>
+        <ListItemButton className={classes.exitListItem} onClick={exitClick}>
           <ListItemIcon>
             <ExitToApp />
           </ListItemIcon>
           <ListItemText primary="退出登陆" />
-        </ListItem>
+        </ListItemButton>
       </List>
     </div>
   );
 
   const createCategory = async () => {
+    await createCategoryMutation.mutateAsync(categoryName);
     setCategoryDialog(false);
-    // await apiCreateCategory(categoryName);
     setCategoryName("");
-    // enqueueSnackbar('successful created', { variant: 'success' });
+    enqueueSnackbar('successful created', { variant: 'success' });
   };
 
   const addCategoryDialog = (
     <Dialog open={categoryDialog} classes={{ paper: classes.dialogPaper }}>
       <DialogTitle>添加类别</DialogTitle>
-      <DialogContent>
+      <DialogContent sx={{ mt: 1 }}>
         <TextField
           value={categoryName}
           onInput={(e) => setCategoryName(e.target.value as string)}
@@ -521,12 +526,13 @@ function useDrawer(props: UseDrawerProps) {
   const drawerItem = (
     <nav className={classes.drawer} aria-label="mailbox folders">
       {/* The implementation can be swapped with js to avoid SEO duplication of links. */}
-      <Hidden mdUp implementation="css">
-        <Drawer
+      <Hidden mdUp>
+        <SwipeableDrawer
           container={container}
           variant="temporary"
           anchor={"left"}
           open={mobileOpen}
+          onOpen={noop}
           onClose={handleDrawerToggle}
           classes={{
             paper: classes.drawerPaper,
@@ -536,9 +542,9 @@ function useDrawer(props: UseDrawerProps) {
           }}
         >
           {drawer}
-        </Drawer>
+        </SwipeableDrawer>
       </Hidden>
-      <Hidden xsDown implementation="css">
+      <Hidden smDown>
         <Drawer
           classes={{
             paper: classes.dialogPaper,
@@ -604,6 +610,22 @@ export default function Bookshelf(props: BookshelfProps) {
 
   const { classes } = useStyles();
 
+  const categoryQuery = useQuery({
+    queryKey: ['getCategory'] as const,
+    queryFn: () => apiGetCategory().then(res => res.data),
+    initialData: props.categories
+  })
+
+  const categories = categoryQuery.data;
+
+  const books = useMemo(() => {
+    if (selectedCategory) {
+      return categories?.find(item => item.id === selectedCategory)?.categoryBook ?? []
+    }
+
+    return props.books
+  }, [categories, props.books, selectedCategory])
+
   const menuClose = () => setMenuAnchor(undefined);
   const menuOpen: React.MouseEventHandler<HTMLButtonElement> = (e) =>
     setMenuAnchor(e.currentTarget as HTMLButtonElement);
@@ -656,8 +678,8 @@ export default function Bookshelf(props: BookshelfProps) {
       <Box component={"main"} className={classes.content}>
         <Toolbar />
         <BookList
-          categories={props.categories}
-          books={props.books}
+          categories={categories}
+          books={books}
           selected={selectedCategory}
         />
       </Box>

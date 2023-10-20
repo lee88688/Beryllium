@@ -22,6 +22,12 @@ export function apiRemoveCategory(data: RemoveCategoryParam) {
   return post("/api/category/remove", data);
 }
 
+export function apiGetCategory() {
+  return get<(Prisma.Category & { categoryBook: Prisma.Book[] })[]>(
+    "/api/category",
+  );
+}
+
 export function apiRemoveBooksFromCategory(
   categoryId: number,
   bookIds: number[],

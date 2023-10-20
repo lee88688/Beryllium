@@ -4,7 +4,7 @@ import { makeStyles } from "y/utils/makesStyles";
 import AppBar from "@mui/material/AppBar";
 import Tabs from "@mui/material/Tabs";
 import Tab from "@mui/material/Tab";
-// import TabPanel from "@mui/material/TabPanel";
+import noop from "lodash/noop";
 import {
   type NestedItemData,
   NestedList,
@@ -99,7 +99,7 @@ export function ReaderDrawer(props: ReaderDrawerProps) {
   } = props;
 
   const [tabIndex, setTabIndex] = useState(0);
-  const [mobileOpen, setMobileOpen] = useState(false);
+  const [bottomDrawerOpen, setBottomDrawerOpen] = useState(false);
   const { classes } = useDrawerStyles();
 
   const tocItem = useMemo(
@@ -149,11 +149,12 @@ export function ReaderDrawer(props: ReaderDrawerProps) {
     <nav className={classes.root} aria-label="mailbox folders">
       {/* The implementation can be swapped with js to avoid SEO duplication of links. */}
       <Hidden mdUp>
-        <Drawer
+        <SwipeableDrawer
           container={container}
           variant="temporary"
           anchor="right"
           open={open}
+          onOpen={noop}
           onClose={onDrawerClose}
           classes={{
             paper: classes.drawerPaper,
@@ -163,7 +164,7 @@ export function ReaderDrawer(props: ReaderDrawerProps) {
           }}
         >
           {drawer}
-        </Drawer>
+        </SwipeableDrawer>
       </Hidden>
       <Hidden smDown>
         <Drawer
@@ -177,6 +178,20 @@ export function ReaderDrawer(props: ReaderDrawerProps) {
           {drawer}
         </Drawer>
       </Hidden>
+      <SwipeableDrawer
+        container={container}
+        anchor="bottom"
+        open={bottomDrawerOpen}
+        swipeAreaWidth={20}
+        disableSwipeToOpen={false}
+        onOpen={noop}
+        onClose={() => setBottomDrawerOpen(false)}
+        ModalProps={{
+          keepMounted: true, // Better open performance on mobile.
+        }}
+      >
+        <Box sx={{ visibility: "visible" }}>test</Box>
+      </SwipeableDrawer>
     </nav>
   );
 }
