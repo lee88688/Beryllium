@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from "react";
 import Typography from "@mui/material/Typography";
-import ListItem from "@mui/material/ListItem";
+import ListItemButton from "@mui/material/ListItemButton";
 import Box from "@mui/material/Box";
 import Divider from "@mui/material/Divider";
 import List from "@mui/material/List";
@@ -13,10 +13,11 @@ import type * as Prisma from "@prisma/client";
 
 const useStyles = makeStyles()(() => ({
   title: {
-    display: "flex",
-    flexDirection: "row",
-    alignItems: "center",
     flexGrow: 1,
+    flexShrink: 1,
+    textOverflow: "ellipsis",
+    whiteSpace: "nowrap",
+    overflow: "hidden",
   },
 }));
 
@@ -49,13 +50,12 @@ function BookmarkListItem(props: BookmarkListItemProps) {
     e.stopPropagation();
 
   return (
-    <ListItem
+    <ListItemButton
       onClick={() => (onClick ? onClick(props) : null)}
-      button
       style={{ display: "block", padding: "0" }}
     >
       <Box p={1}>
-        <Box display="flex" flexDirection="row">
+        <Box display="flex" flexDirection="row" sx={{ overflow: "hidden" }}>
           <Typography className={classes.title} variant="h6">
             {title}
           </Typography>
@@ -79,7 +79,7 @@ function BookmarkListItem(props: BookmarkListItemProps) {
         <Typography variant="body1">{selectedString}</Typography>
       </Box>
       <Divider />
-    </ListItem>
+    </ListItemButton>
   );
 }
 

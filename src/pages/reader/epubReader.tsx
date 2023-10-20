@@ -47,7 +47,6 @@ export function useReader({
 }: UseReaderProps) {
   const epubReaderRef = useRef<EpubReader>();
 
-  const rendition = useRef<Rendition>();
   const anchorEl = useRef<VirtualElement>();
   const [openPopover, setOpenPopover] = useState(false);
   const [curEditorValue, setCurEditorValue] = useState<EditorValue>(
@@ -212,7 +211,7 @@ export function useReader({
 
   return {
     bookItem,
-    rendition,
+    epubReaderRef,
     nextPage: () => {
       return epubReaderRef.current?.next();
     },

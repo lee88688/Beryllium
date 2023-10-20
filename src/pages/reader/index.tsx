@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback } from "react";
+import React, { useState, useCallback } from "react";
 import { useRouter } from "next/router";
 import Typography from "@mui/material/Typography";
 import AppBar from "@mui/material/AppBar";
@@ -9,7 +9,12 @@ import ArrowBackIosIcon from "@mui/icons-material/ArrowBackIos";
 import ArrowBack from "@mui/icons-material/ArrowBack";
 import { makeStyles } from "y/utils/makesStyles";
 import { useReader } from "./epubReader";
-import { apiUpdateBookCurrent, getFileUrl, getMark } from "../clientApi";
+import {
+  apiUpdateBookCurrent,
+  getFileUrl,
+  getMark,
+  removeMark,
+} from "../clientApi";
 import { ReaderDrawer, drawerWidth, viewBreakPoint } from "./readerDrawer";
 import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
@@ -27,7 +32,7 @@ import {
   type NestedItemData,
   type NestedListItemClick,
 } from "y/components/nestedList";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 
 const useStyles = makeStyles()((theme) => ({
   root: { display: "flex", flexDirection: "row-reverse" },
@@ -111,7 +116,20 @@ export default function Reader(props: ReaderProps) {
     return highlightListQuery.refetch();
   }, []);
 
-  const { bookItem, nextPage, prevPage, rendition } = useReader({
+  const bookmarkListQuery = useQuery({
+    queryKey: ["getMark", id, MarkType.Bookmark],
+    queryFn: () =>
+      getMark({ bookId: id, type: MarkType.Bookmark }).then((res) => res.data),
+    initialData: props.bookmarks,
+  });
+
+  const bookmarkList = bookmarkListQuery.data;
+
+  const removeMarkMutation = useMutation({
+    mutationFn: (id: number) => removeMark(id),
+  });
+
+  const { bookItem, nextPage, prevPage, epubReaderRef } = useReader({
     highlightList,
     opfUrl: contentUrl,
     bookId: id,
@@ -124,40 +142,59 @@ export default function Reader(props: ReaderProps) {
   const menuClose = () => setMenuAnchorEl(null);
 
   const addBookmark = async () => {
-    const { start } = await rendition.current?.currentLocation();
-    const range = rendition.current?.getRange(start.cfi);
-    const title = getElementHeading(range.startContainer);
+    if (!epubReaderRef.current) return;
+
+    const location = await epubReaderRef.current.currentLocation();
+    const cfi = location.start.cfi;
+    const range = epubReaderRef.current.getRange(cfi);
+    const title = range.startContainer
+      ? getElementHeading(range.startContainer as HTMLElement)
+      : "";
     menuClose();
-    console.log("current cfi", start);
+    console.log("current cfi", location);
     await addMark({
       bookId: id,
       type: MarkType.Bookmark,
-      selectedString: truncate(range.startContainer.textContent),
-      epubcfi: start.cfi,
+      selectedString: truncate(range.startContainer.textContent ?? ""),
+      epubcfi: cfi,
       title,
+      color: "",
+      content: "",
     });
+    await bookmarkListQuery.refetch();
     // dispatch(getBookmarkList(id));
   };
 
   const goBack = async () => {
     router.back();
-    const { start } = await rendition.current.currentLocation();
-    console.log("current cfi", start);
-    await apiUpdateBookCurrent(id, start.cfi as string);
+    if (!epubReaderRef.current) return;
+
+    const location = await epubReaderRef.current?.currentLocation();
+    const cfi = location.start.cfi;
+    console.log("current cfi", location);
+    await apiUpdateBookCurrent(id, cfi);
   };
 
   const handleTocClick = useCallback<NestedListItemClick>(
     ({ src }) => {
-      return rendition.current?.display(src);
+      return epubReaderRef.current?.display(src);
     },
-    [rendition],
+    [epubReaderRef],
   );
 
   const handleHighlightClick = useCallback(
     ({ epubcfi }: Pick<Prisma.Mark, "epubcfi">) => {
-      return rendition.current?.display(epubcfi);
+      return epubReaderRef.current?.display(epubcfi);
     },
-    [rendition],
+    [epubReaderRef],
+  );
+
+  const handleRemoveMark = useCallback(
+    async (mark: Prisma.Mark) => {
+      await removeMarkMutation.mutateAsync(mark.id);
+      await bookmarkListQuery.refetch();
+    },
+    [bookmarkListQuery, removeMarkMutation],
   );
 
   return (
@@ -186,10 +223,11 @@ export default function Reader(props: ReaderProps) {
       <ReaderDrawer
         id={id}
         tocData={props.tocData}
-        bookmarks={props.bookmarks}
+        bookmarks={bookmarkList}
         highlights={highlightList}
         onClickToc={handleTocClick}
         onClickHighlight={handleHighlightClick}
+        onRemoveMark={handleRemoveMark}
       />
       <main className={classes.main}>
         <Toolbar />

@@ -2,7 +2,7 @@ import React, { useState, useRef, useContext } from "react";
 import isFunction from "lodash/isFunction";
 import { makeStyles } from "../utils/makesStyles";
 import List from "@mui/material/List";
-import ListItem from "@mui/material/ListItem";
+import ListItemButton from "@mui/material/ListItemButton";
 import ListItemText from "@mui/material/ListItemText";
 import Collapse from "@mui/material/Collapse";
 import ListItemSecondaryAction from "@mui/material/ListItemSecondaryAction";
@@ -63,8 +63,7 @@ function NestedListItem(props: NestedListItemProps) {
   if (Array.isArray(children) && children.length) {
     return (
       <React.Fragment>
-        <ListItem
-          button
+        <ListItemButton
           selected={selected === key}
           className={classes.nested}
           onClick={handleClick}
@@ -83,7 +82,7 @@ function NestedListItem(props: NestedListItemProps) {
               </IconButton>
             </ListItemSecondaryAction>
           )}
-        </ListItem>
+        </ListItemButton>
         <Collapse in={open} timeout="auto" unmountOnExit>
           <List component="div" disablePadding>
             {children.map((item, index) => (
@@ -100,14 +99,13 @@ function NestedListItem(props: NestedListItemProps) {
     );
   }
   return (
-    <ListItem
-      button
+    <ListItemButton
       selected={key === selected}
       className={classes.nested}
       onClick={handleClick}
     >
       <ListItemText primary={label} />
-    </ListItem>
+    </ListItemButton>
   );
 }
 

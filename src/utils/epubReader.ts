@@ -7,6 +7,11 @@ import EventEmitter from "eventemitter3";
 import { type Colors, getColorsValue } from "y/components/highlightEditor";
 import { EpubAnnotationType } from "./constants";
 import pick from "lodash/pick";
+import { type DisplayedLocation } from "epubjs/types/rendition";
+
+declare module "epubjs/types/rendition" {
+  interface DisplayedLocation {}
+}
 
 export class EpubReader extends EventEmitter<"selected" | "markClicked"> {
   book: Book;
@@ -116,5 +121,16 @@ export class EpubReader extends EventEmitter<"selected" | "markClicked"> {
 
     g.dataset.color = mark.color;
     g.setAttribute("fill", getColorsValue(mark.color as Colors)!);
+  }
+
+  currentLocation() {
+    return this.rendition.currentLocation() as unknown as Promise<{
+      start: DisplayedLocation;
+      end: DisplayedLocation;
+    }>;
+  }
+
+  getRange(cfi: string) {
+    return this.rendition.getRange(cfi);
   }
 }

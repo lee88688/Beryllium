@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from "react";
-import ListItem from "@mui/material/ListItem";
+import ListItemButton from "@mui/material/ListItemButton";
 import Typography from "@mui/material/Typography";
 import List from "@mui/material/List";
 import Divider from "@mui/material/Divider";
@@ -74,9 +74,8 @@ function HighlightListItem(props: HighlightListItemProps) {
   );
 
   return (
-    <ListItem
+    <ListItemButton
       onClick={() => (onClick ? onClick(props) : null)}
-      button
       style={{ display: "block", padding: "0" }}
     >
       <Box p={1}>
@@ -110,7 +109,7 @@ function HighlightListItem(props: HighlightListItemProps) {
         {comment}
       </Box>
       <Divider />
-    </ListItem>
+    </ListItemButton>
   );
 }
 
