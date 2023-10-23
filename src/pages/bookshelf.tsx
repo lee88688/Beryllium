@@ -27,7 +27,13 @@ import DialogContent from "@mui/material/DialogContent";
 import DialogActions from "@mui/material/DialogActions";
 import Button from "@mui/material/Button";
 import TextField from "@mui/material/TextField";
-import { apiCreateCategory, apiDeleteBook, apiGetBookCurrent, apiGetCategory, uploadBook } from "./clientApi";
+import {
+  apiCreateCategory,
+  apiDeleteBook,
+  apiGetBookCurrent,
+  apiGetCategory,
+  uploadBook,
+} from "./clientApi";
 import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
 import MoreVert from "@mui/icons-material/MoreVert";
@@ -44,7 +50,7 @@ import { apiAddBooksToCategory } from "./clientApi";
 import { useSnackbar } from "notistack";
 import { makeStyles } from "../utils/makesStyles";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import noop from 'lodash/noop'
+import noop from "lodash/noop";
 
 const BOOK_HEIGHT = 240;
 const BOOK_WIDTH = 150;
@@ -125,7 +131,7 @@ function BookShelfItem(props: BookShelfItemProps) {
           classes={{
             root: classes.tile,
           }}
-          style={{ height: '100%' }}
+          style={{ height: "100%" }}
         >
           <img
             src={getFileUrl(book.fileName, book.cover)}
@@ -214,7 +220,7 @@ function BookList(props: BookListProps) {
 
   const currentCategories = useMemo(() => {
     return categories.filter((item) => category !== item.id) ?? [];
-  }, [categories, category])
+  }, [categories, category]);
 
   const bookClick = (
     id: number,
@@ -283,7 +289,14 @@ function BookList(props: BookListProps) {
 
   const handleCategorySelected = (id: number) => async () => {
     setsCategoryDialog(false);
-    await apiAddBooksToCategory(id, selectedBooks);
+    await apiAddBooksToCategory(
+      selectedBooks.map((bookId) => {
+        return {
+          bookId,
+          categoryId: id,
+        };
+      }),
+    );
     setSelectedBooks([]);
     enqueueSnackbar("添加成功", { variant: "success" });
   };
@@ -408,7 +421,7 @@ function useDrawer(props: UseDrawerProps) {
 
   const createCategoryMutation = useMutation({
     mutationFn: (name: string) => apiCreateCategory({ name }),
-  })
+  });
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
@@ -491,7 +504,7 @@ function useDrawer(props: UseDrawerProps) {
     await createCategoryMutation.mutateAsync(categoryName);
     setCategoryDialog(false);
     setCategoryName("");
-    enqueueSnackbar('successful created', { variant: 'success' });
+    enqueueSnackbar("successful created", { variant: "success" });
   };
 
   const addCategoryDialog = (
@@ -569,7 +582,9 @@ const drawerWidth = 300;
 
 interface BookshelfProps {
   books: Prisma.Book[];
-  categories: (Prisma.Category & { categoryBook: Prisma.CategoryBook[] })[];
+  categories: (Prisma.Category & {
+    categoryBook: (Prisma.CategoryBook & { book: Prisma.Book })[];
+  })[];
 }
 
 const useStyles = makeStyles()((theme) => ({
@@ -611,20 +626,24 @@ export default function Bookshelf(props: BookshelfProps) {
   const { classes } = useStyles();
 
   const categoryQuery = useQuery({
-    queryKey: ['getCategory'] as const,
-    queryFn: () => apiGetCategory().then(res => res.data),
-    initialData: props.categories
-  })
+    queryKey: ["getCategory"] as const,
+    queryFn: () => apiGetCategory().then((res) => res.data),
+    initialData: props.categories,
+  });
 
   const categories = categoryQuery.data;
 
   const books = useMemo(() => {
     if (selectedCategory) {
-      return categories?.find(item => item.id === selectedCategory)?.categoryBook ?? []
+      return (
+        categories
+          .find((item) => item.id === selectedCategory)
+          ?.categoryBook.map((item) => item.book) ?? []
+      );
     }
 
-    return props.books
-  }, [categories, props.books, selectedCategory])
+    return props.books;
+  }, [categories, props.books, selectedCategory]);
 
   const menuClose = () => setMenuAnchor(undefined);
   const menuOpen: React.MouseEventHandler<HTMLButtonElement> = (e) =>
@@ -690,13 +709,19 @@ export default function Bookshelf(props: BookshelfProps) {
 export const getServerSideProps: GetServerSideProps<BookshelfProps> =
   withSessionSsr(async ({ req }) => {
     const user = req.session.user;
+
     const books = await prisma.book.findMany({ where: { userId: user.id } });
+
     const categories = await prisma.category.findMany({
       where: {
         userId: user.id,
       },
       include: {
-        categoryBook: true,
+        categoryBook: {
+          include: {
+            book: true,
+          },
+        },
       },
     });
 

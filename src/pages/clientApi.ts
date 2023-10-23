@@ -23,9 +23,11 @@ export function apiRemoveCategory(data: RemoveCategoryParam) {
 }
 
 export function apiGetCategory() {
-  return get<(Prisma.Category & { categoryBook: Prisma.Book[] })[]>(
-    "/api/category",
-  );
+  return get<
+    (Prisma.Category & {
+      categoryBook: (Prisma.CategoryBook & { book: Prisma.Book })[];
+    })[]
+  >("/api/category");
 }
 
 export function apiRemoveBooksFromCategory(

@@ -11,7 +11,11 @@ const handler: NextApiHandler = async (req, res) => {
       userId,
     },
     include: {
-      categoryBook: true,
+      categoryBook: {
+        include: {
+          book: true,
+        },
+      },
     },
   });
   return createSuccessRes(res, categories);
