@@ -5,7 +5,14 @@ import IconButton from "@mui/material/IconButton";
 import MenuIcon from "@mui/icons-material/Menu";
 import Typography from "@mui/material/Typography";
 import { Box } from "@mui/material";
-import { apiGetCategory } from "../clientApi";
+import {
+  apiAddBooksToCategory,
+  apiDeleteBook,
+  apiGetBook,
+  apiGetCategory,
+  apiRemoveBooksFromCategory,
+  uploadBook,
+} from "../clientApi";
 import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
 import MoreVert from "@mui/icons-material/MoreVert";
@@ -73,6 +80,12 @@ export default function Bookshelf(props: BookshelfProps) {
     initialData: props.categories,
   });
 
+  const bookQuery = useQuery({
+    queryKey: ["getBook"],
+    queryFn: () => apiGetBook().then((res) => res.data),
+    initialData: props.books,
+  });
+
   const categories = categoryQuery.data;
 
   const books = useMemo(() => {
@@ -96,6 +109,37 @@ export default function Bookshelf(props: BookshelfProps) {
     // dispatch(setCategoryAndGetBooks(null));
     // dispatch(getCategories());
     enqueueSnackbar("删除成功", { variant: "success" });
+  };
+
+  const handleSelectFile = async (file: File) => {
+    await uploadBook(file);
+    // dispatch(getBooks());
+    enqueueSnackbar("successful upload", { variant: "success" });
+  };
+
+  const handleAddBooksToCategory = async (
+    params: { categoryId: number; bookId: number }[],
+  ) => {
+    await apiAddBooksToCategory(params);
+    enqueueSnackbar("add successful", { variant: "success" });
+    await categoryQuery.refetch();
+  };
+
+  const handleRemoveBooksFromCategory = async (
+    categoryId: number,
+    bookId: number,
+  ) => {
+    await apiRemoveBooksFromCategory(categoryId, [bookId]);
+    // dispatch(getBooks());
+    enqueueSnackbar("移除成功", { variant: "success" });
+    await categoryQuery.refetch();
+  };
+
+  const handleDeleteBook = async (bookId: number) => {
+    await apiDeleteBook({ id: bookId });
+    // dispatch(getBooks());
+    enqueueSnackbar("删除成功", { variant: "success" });
+    await Promise.all([categoryQuery.refetch(), bookQuery.refetch()]);
   };
 
   const menuButton = !selectedCategory ? null : (
@@ -142,6 +186,10 @@ export default function Bookshelf(props: BookshelfProps) {
           categories={categories}
           books={books}
           selected={selectedCategory}
+          onSelectFile={handleSelectFile}
+          onAddBooksToCategory={handleAddBooksToCategory}
+          onRemoveBooksFromCategory={handleRemoveBooksFromCategory}
+          onDeleteBook={handleDeleteBook}
         />
       </Box>
     </Box>

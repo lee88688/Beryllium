@@ -63,6 +63,10 @@ export function uploadBook(file: File) {
   return post("/api/book/create", form);
 }
 
+export function apiGetBook() {
+  return get<Prisma.Book[]>(`/api/book`);
+}
+
 export function getMark(query: GetMarkQuery) {
   return get<Prisma.Mark[]>("/api/mark", query);
 }

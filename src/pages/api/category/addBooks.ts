@@ -10,6 +10,7 @@ export interface AddBooksToCategoryParams {
 
 const handler: NextApiHandler = async (req, res) => {
   const data = req.body as AddBooksToCategoryParams[];
+  // fixme: if already add, do not add it
   for (const item of data) {
     await prisma.categoryBook.create({ data: item });
   }

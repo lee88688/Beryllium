@@ -26,12 +26,6 @@ import {
   apiAddBooksToCategory,
 } from "../clientApi";
 
-export interface BookShelfItemProps {
-  book: Prisma.Book & { category: Prisma.Category[] };
-  onClick: () => void;
-  onMenuSelected: (type: BookMenuType, id: number) => void;
-}
-
 function getFileUrl(fileName: string, path: string) {
   return `/api/book/file/${fileName}/${path}`;
 }
@@ -69,10 +63,17 @@ export enum BookMenuType {
   REMOVE_BOOK = "REMOVE_BOOK",
 }
 
+export interface BookShelfItemProps {
+  selectedCategory: number;
+  book: Prisma.Book;
+  onClick: () => void;
+  onMenuSelected: (type: BookMenuType, id: number) => void;
+}
+
 function BookShelfItem(props: BookShelfItemProps) {
   const { book, onClick } = props;
   const [anchorEl, setAnchorEl] = useState<HTMLDListElement | null>(null);
-  const category = book.category;
+  const selectedCategory = props.selectedCategory;
 
   const { classes } = useGridItemStyles();
 
@@ -122,7 +123,7 @@ function BookShelfItem(props: BookShelfItemProps) {
         <MenuItem onClick={menuClick(BookMenuType.ADD_CATEGORY, book.id)}>
           添加到分类
         </MenuItem>
-        {category && (
+        {selectedCategory !== 0 && (
           <MenuItem
             onClick={menuClick(BookMenuType.REMOVE_FROM_CATEGORY, book.id)}
           >
@@ -139,6 +140,12 @@ function BookShelfItem(props: BookShelfItemProps) {
 
 export type BookListProps = BookshelfProps & {
   selected: number;
+  onSelectFile: (file: File) => void;
+  onAddBooksToCategory: (
+    params: { categoryId: number; bookId: number }[],
+  ) => void;
+  onRemoveBooksFromCategory: (categoryId: number, bookId: number) => void;
+  onDeleteBook: (bookId: number) => void;
 };
 
 const useGridStyles = makeStyles()((theme) => ({
@@ -189,8 +196,8 @@ export function BookList(props: BookListProps) {
 
   const { classes } = useGridStyles();
 
-  const currentCategories = useMemo(() => {
-    return categories.filter((item) => category !== item.id) ?? [];
+  const categoriesExcludeCurrent = useMemo(() => {
+    return categories.filter((item) => category !== item.id);
   }, [categories, category]);
 
   const bookClick = (
@@ -213,11 +220,11 @@ export function BookList(props: BookListProps) {
 
   const bookMenuSelected = async (type: BookMenuType, id: number) => {
     if (
-      type !== BookMenuType.REMOVE_BOOK &&
-      Array.isArray(currentCategories) &&
-      currentCategories.length === 0
+      type === BookMenuType.ADD_CATEGORY &&
+      Array.isArray(categoriesExcludeCurrent) &&
+      categoriesExcludeCurrent.length === 0
     ) {
-      enqueueSnackbar("暂无类别，请添加后重试！");
+      enqueueSnackbar("暂无其他类别，请添加后重试！");
       return;
     }
     switch (type) {
@@ -228,16 +235,12 @@ export function BookList(props: BookListProps) {
       }
       case BookMenuType.REMOVE_FROM_CATEGORY: {
         if (!category) return;
-        await apiRemoveBooksFromCategory(category, [id]);
-        // dispatch(getBooks());
-        enqueueSnackbar("移除成功", { variant: "success" });
+        props.onRemoveBooksFromCategory(category, id);
         break;
       }
       case BookMenuType.REMOVE_BOOK: {
         if (!id) return;
-        await apiDeleteBook(id);
-        // dispatch(getBooks());
-        enqueueSnackbar("删除成功", { variant: "success" });
+        props.onDeleteBook(id);
         break;
       }
       default: {
@@ -252,15 +255,13 @@ export function BookList(props: BookListProps) {
     enqueueSnackbar("start upload");
     const [file] = inputElement.files ?? [];
     if (!file) return;
-    await uploadBook(file);
-    // dispatch(getBooks());
-    enqueueSnackbar("successful upload", { variant: "success" });
+    props.onSelectFile(file);
     inputElement.value = "";
   };
 
-  const handleCategorySelected = (id: number) => async () => {
+  const handleCategorySelected = (id: number) => () => {
     setsCategoryDialog(false);
-    await apiAddBooksToCategory(
+    props.onAddBooksToCategory(
       selectedBooks.map((bookId) => {
         return {
           bookId,
@@ -269,7 +270,6 @@ export function BookList(props: BookListProps) {
       }),
     );
     setSelectedBooks([]);
-    enqueueSnackbar("添加成功", { variant: "success" });
   };
 
   const addItem = category ? null : (
@@ -310,6 +310,7 @@ export function BookList(props: BookListProps) {
         {books.map((book) => (
           <BookShelfItem
             key={book.id}
+            selectedCategory={category}
             book={book}
             onClick={bookClick(
               book.id,
@@ -328,7 +329,7 @@ export function BookList(props: BookListProps) {
       >
         <DialogTitle>选择类别</DialogTitle>
         <List>
-          {currentCategories.map((item) => (
+          {categoriesExcludeCurrent.map((item) => (
             <ListItemButton
               key={item.id}
               onClick={handleCategorySelected(item.id)}
