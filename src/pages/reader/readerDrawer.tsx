@@ -72,6 +72,10 @@ const useDrawerStyles = makeStyles()((theme) => ({
   tab: {
     minWidth: 0,
   },
+  bottomDrawer: {
+    overflow: "visible",
+    height: "20px",
+  },
 }));
 
 type ReaderDrawerProps = {
@@ -178,19 +182,33 @@ export function ReaderDrawer(props: ReaderDrawerProps) {
           {drawer}
         </Drawer>
       </Hidden>
+      {/* used for bottom setting */}
       <SwipeableDrawer
         container={container}
+        classes={{ paper: classes.bottomDrawer }}
         anchor="bottom"
         open={bottomDrawerOpen}
         swipeAreaWidth={20}
-        disableSwipeToOpen={false}
+        disableSwipeToOpen={true}
         onOpen={noop}
         onClose={() => setBottomDrawerOpen(false)}
         ModalProps={{
           keepMounted: true, // Better open performance on mobile.
         }}
       >
-        <Box sx={{ visibility: "visible" }}>test</Box>
+        <Box
+          sx={{
+            visibility: "visible",
+            top: `-20px`,
+            left: "50%",
+            position: "absolute",
+            pointerEvents: "auto",
+          }}
+          onClick={() => setBottomDrawerOpen(!bottomDrawerOpen)}
+        >
+          test
+        </Box>
+        <Box>test3</Box>
       </SwipeableDrawer>
     </nav>
   );
