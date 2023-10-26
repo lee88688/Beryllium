@@ -25,15 +25,8 @@ import Button from "@mui/material/Button";
 import TextField from "@mui/material/TextField";
 import ExitToApp from "@mui/icons-material/ExitToApp";
 import Settings from "@mui/icons-material/Settings";
-import { Hidden, SwipeableDrawer } from "@mui/material";
-import noop from "lodash/noop";
+import { Box, Hidden, SwipeableDrawer } from "@mui/material";
 import Typography from "@mui/material/Typography";
-
-export type UseDrawerProps = {
-  categories: Prisma.Category[];
-  selected: number;
-  onSelected: (id: number) => void;
-};
 
 export const useDrawerStyles = makeStyles()((theme) => ({
   drawer: {
@@ -66,8 +59,15 @@ export const useDrawerStyles = makeStyles()((theme) => ({
   },
 }));
 
-export function useDrawer(props: UseDrawerProps) {
-  const [mobileOpen, setMobileOpen] = useState(false);
+export type BookshelfDrawerProps = {
+  categories: Prisma.Category[];
+  selected: number;
+  mobileOpen: boolean;
+  onSelected: (id: number) => void;
+  onMobileOpenChange: (open: boolean) => void;
+};
+
+export function BookshelfDrawer(props: BookshelfDrawerProps) {
   const [categoryDialog, setCategoryDialog] = useState(false);
   const [categoryName, setCategoryName] = useState("");
   const categories = props.categories;
@@ -82,7 +82,7 @@ export function useDrawer(props: UseDrawerProps) {
   });
 
   const handleDrawerToggle = () => {
-    setMobileOpen(!mobileOpen);
+    props.onMobileOpenChange(!props.mobileOpen);
   };
 
   const handleCategoryClick = (id: number) => () => {
@@ -131,7 +131,7 @@ export function useDrawer(props: UseDrawerProps) {
         <ListItemButton
           onClick={() => {
             setCategoryDialog(true);
-            setMobileOpen(false);
+            props.onMobileOpenChange(false);
           }}
         >
           <ListItemIcon>
@@ -168,14 +168,16 @@ export function useDrawer(props: UseDrawerProps) {
   const addCategoryDialog = (
     <Dialog open={categoryDialog} classes={{ paper: classes.dialogPaper }}>
       <DialogTitle>添加类别</DialogTitle>
-      <DialogContent sx={{ mt: 1 }}>
-        <TextField
-          value={categoryName}
-          onInput={(e) => setCategoryName(e.target.value as string)}
-          autoFocus
-          label="输入类别名称"
-          fullWidth
-        />
+      <DialogContent>
+        <Box sx={{ pt: 1 }}>
+          <TextField
+            value={categoryName}
+            onInput={(e) => setCategoryName(e.target.value as string)}
+            autoFocus
+            label="输入类别名称"
+            fullWidth
+          />
+        </Box>
       </DialogContent>
       <DialogActions>
         <Button
@@ -194,7 +196,7 @@ export function useDrawer(props: UseDrawerProps) {
     </Dialog>
   );
 
-  const drawerItem = (
+  return (
     <nav className={classes.drawer} aria-label="mailbox folders">
       {/* The implementation can be swapped with js to avoid SEO duplication of links. */}
       <Hidden mdUp>
@@ -202,8 +204,8 @@ export function useDrawer(props: UseDrawerProps) {
           container={container}
           variant="temporary"
           anchor={"left"}
-          open={mobileOpen}
-          onOpen={noop}
+          open={props.mobileOpen}
+          onOpen={() => props.onMobileOpenChange(true)}
           onClose={handleDrawerToggle}
           classes={{
             paper: classes.drawerPaper,
@@ -229,9 +231,4 @@ export function useDrawer(props: UseDrawerProps) {
       {addCategoryDialog}
     </nav>
   );
-
-  return {
-    handleDrawerToggle,
-    drawerItem,
-  };
 }

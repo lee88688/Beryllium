@@ -25,7 +25,7 @@ import { useSnackbar } from "notistack";
 import { makeStyles } from "../../utils/makesStyles";
 import { useQuery } from "@tanstack/react-query";
 import { BookList } from "./bookList";
-import { useDrawer } from "./drawer";
+import { useDrawer, BookshelfDrawer } from "./drawer";
 
 export const drawerWidth = 300;
 
@@ -64,11 +64,7 @@ const useStyles = makeStyles()((theme) => ({
 
 export default function Bookshelf(props: BookshelfProps) {
   const [selectedCategory, setSelectedCategory] = useState(0);
-  const { handleDrawerToggle, drawerItem } = useDrawer({
-    selected: selectedCategory,
-    onSelected: setSelectedCategory,
-    categories: props.categories,
-  });
+  const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
   const [menuAnchor, setMenuAnchor] = useState<HTMLButtonElement>();
   const { enqueueSnackbar } = useSnackbar();
 
@@ -162,7 +158,7 @@ export default function Bookshelf(props: BookshelfProps) {
             aria-label="open drawer"
             edge="start"
             className={classes.sidebarButton}
-            onClick={handleDrawerToggle}
+            onClick={() => setMobileDrawerOpen(!mobileDrawerOpen)}
           >
             <MenuIcon />
           </IconButton>
@@ -179,7 +175,14 @@ export default function Bookshelf(props: BookshelfProps) {
           </Menu>
         </Toolbar>
       </AppBar>
-      {drawerItem}
+      {/* {drawerItem} */}
+      <BookshelfDrawer
+        mobileOpen={mobileDrawerOpen}
+        selected={selectedCategory}
+        onSelected={setSelectedCategory}
+        categories={props.categories}
+        onMobileOpenChange={setMobileDrawerOpen}
+      />
       <Box component={"main"} className={classes.content}>
         <Toolbar />
         <BookList
