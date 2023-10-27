@@ -25,7 +25,7 @@ import { useSnackbar } from "notistack";
 import { makeStyles } from "../../utils/makesStyles";
 import { useQuery } from "@tanstack/react-query";
 import { BookList } from "./bookList";
-import { useDrawer, BookshelfDrawer } from "./drawer";
+import { BookshelfDrawer } from "./drawer";
 
 export const drawerWidth = 300;
 

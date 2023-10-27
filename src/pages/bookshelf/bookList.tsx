@@ -18,13 +18,7 @@ import ListItemButton from "@mui/material/ListItemButton";
 import ListItemText from "@mui/material/ListItemText";
 import { useRouter } from "next/router";
 import { useSnackbar } from "notistack";
-import {
-  apiGetBookCurrent,
-  apiRemoveBooksFromCategory,
-  apiDeleteBook,
-  uploadBook,
-  apiAddBooksToCategory,
-} from "../clientApi";
+import { apiGetBookCurrent } from "../clientApi";
 
 function getFileUrl(fileName: string, path: string) {
   return `/api/book/file/${fileName}/${path}`;

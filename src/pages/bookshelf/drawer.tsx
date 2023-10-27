@@ -81,8 +81,8 @@ export function BookshelfDrawer(props: BookshelfDrawerProps) {
     mutationFn: (name: string) => apiCreateCategory({ name }),
   });
 
-  const handleDrawerToggle = () => {
-    props.onMobileOpenChange(!props.mobileOpen);
+  const handleDrawerClose = () => {
+    props.onMobileOpenChange(false);
   };
 
   const handleCategoryClick = (id: number) => () => {
@@ -206,7 +206,7 @@ export function BookshelfDrawer(props: BookshelfDrawerProps) {
           anchor={"left"}
           open={props.mobileOpen}
           onOpen={() => props.onMobileOpenChange(true)}
-          onClose={handleDrawerToggle}
+          onClose={handleDrawerClose}
           classes={{
             paper: classes.drawerPaper,
           }}
