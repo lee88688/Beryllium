@@ -124,7 +124,8 @@ export function useReader({
 
   useEffect(() => {
     epubReaderRef.current = new EpubReader(opfUrl, "viewer");
-    void epubReaderRef.current.display(startCfi);
+    // when book has no current, it is empty string
+    void epubReaderRef.current.display(startCfi || 0);
     epubReaderRef.current.on("selected", handleSelected);
     epubReaderRef.current.on("markClicked", handleMarkClick);
   }, []);
