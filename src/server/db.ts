@@ -59,26 +59,31 @@ export const prisma =
 
 type Book = Prisma.Book & { contentObject: any; contentMetadata: any };
 
-function getManifestItemFromId(book: Book, id: string) {
+function getManifestItemFromId(book: Book, id?: string): Record<string, string> | undefined {
+  if (!id) return;
+
   const { contentObject: { package: p } = {} } = book;
-  if (!p) return {};
+  if (!p) return;
   const manifest = p.manifest[0];
   const items: any[] = manifest.item || [];
   const item = items.find(({ $ }) => $.id === id);
-  return item ? item.$ : null;
+  return item ? item.$ : undefined;
 }
 
 function getManifestItemHrefUrl(book: Book, href: string) {
   if (!book.contentPath) return "";
   const dir = path.dirname(book.contentPath);
-  return path.join(dir, href);
+  // fixme: asar-async has a bug when path is windows like, eg: OEBPS\toc.ncx
+  // original code use `path-webpack` package
+  // return path.join(dir, href);
+  return `${dir}/${href}`
 }
 
-function getMetaFromName(book: Book, name: string) {
+function getMetaFromName(book: Book, name: string): string | undefined {
   const metadata = book.contentMetadata;
   const meta: any[] = metadata.meta || [];
   const res = meta.find(({ $: { name: mName } }) => mName === name);
-  if (!res) return null;
+  if (!res) return;
   return res.$.content;
 }
 
@@ -118,8 +123,13 @@ export function fillInBaseInfo(book: Omit<Prisma.Book, 'id'>) {
   book.title = getMetadataFromKey(resultBook, "title");
   book.description = getMetadataFromKey(resultBook, "description");
   book.author = getMetadataFromKey(resultBook, "creator");
-  const coverId = getMetaFromName(resultBook, "cover") as string;
-  const coverItem = getManifestItemFromId(resultBook, coverId) as { href: string };
+
+  const coverId = getMetaFromName(resultBook, "cover");
+  const coverItem = getManifestItemFromId(resultBook, coverId);
+  if (!coverItem) {
+    book.cover = ''
+    return;
+  }
   book.cover = getManifestItemHrefUrl(resultBook, coverItem.href);
 }
 
