@@ -3,9 +3,8 @@ import { drawerWidth } from ".";
 import { makeStyles } from "y/utils/makesStyles";
 import { useState } from "react";
 import { useSnackbar } from "notistack";
-import { useMutation } from "@tanstack/react-query";
 import { useRouter } from "next/router";
-import { apiCreateCategory, apiLogout } from "../clientApi";
+import { apiLogout } from "../clientApi";
 import Divider from "@mui/material/Divider";
 import List from "@mui/material/List";
 import ListItem from "@mui/material/ListItem";
@@ -65,6 +64,7 @@ export type BookshelfDrawerProps = {
   mobileOpen: boolean;
   onSelected: (id: number) => void;
   onMobileOpenChange: (open: boolean) => void;
+  onCreateCategory: (name: string) => Promise<void>;
 };
 
 export function BookshelfDrawer(props: BookshelfDrawerProps) {
@@ -76,10 +76,6 @@ export function BookshelfDrawer(props: BookshelfDrawerProps) {
   const router = useRouter();
 
   const { classes } = useDrawerStyles();
-
-  const createCategoryMutation = useMutation({
-    mutationFn: (name: string) => apiCreateCategory({ name }),
-  });
 
   const handleDrawerClose = () => {
     props.onMobileOpenChange(false);
@@ -159,10 +155,9 @@ export function BookshelfDrawer(props: BookshelfDrawerProps) {
   );
 
   const createCategory = async () => {
-    await createCategoryMutation.mutateAsync(categoryName);
+    await props.onCreateCategory(categoryName);
     setCategoryDialog(false);
     setCategoryName("");
-    enqueueSnackbar("successful created", { variant: "success" });
   };
 
   const addCategoryDialog = (
@@ -181,7 +176,6 @@ export function BookshelfDrawer(props: BookshelfDrawerProps) {
       </DialogContent>
       <DialogActions>
         <Button
-          color="primary"
           onClick={() => {
             setCategoryName("");
             setCategoryDialog(false);

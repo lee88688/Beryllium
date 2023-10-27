@@ -7,6 +7,7 @@ import Typography from "@mui/material/Typography";
 import { Box } from "@mui/material";
 import {
   apiAddBooksToCategory,
+  apiCreateCategory,
   apiDeleteBook,
   apiGetBook,
   apiGetCategory,
@@ -22,11 +23,11 @@ import { type GetServerSideProps } from "next";
 import { prisma } from "y/server/db";
 import { withSessionSsr } from "y/config";
 import { useSnackbar } from "notistack";
-import { makeStyles } from "../../utils/makesStyles";
+import { makeStyles } from "y/utils/makesStyles";
 import { useQuery } from "@tanstack/react-query";
 import { BookList } from "./bookList";
 import { BookshelfDrawer } from "./drawer";
-import { useCancelableSnackbar } from "y/hooks/useCancelableSnackbar";
+import { useConfirmDialog } from "y/hooks/useConfirmDialog";
 
 export const drawerWidth = 300;
 
@@ -97,15 +98,26 @@ export default function Bookshelf(props: BookshelfProps) {
     return props.books;
   }, [categories, props.books, selectedCategory]);
 
+  const { dialog, openDialog, closeDialog } = useConfirmDialog();
+
   const menuClose = () => setMenuAnchor(undefined);
   const menuOpen: React.MouseEventHandler<HTMLButtonElement> = (e) =>
     setMenuAnchor(e.currentTarget as HTMLButtonElement);
-  const handleRemoveCategory = () => {
+
+  const handleRemoveCategory = async () => {
     menuClose();
-    apiRemoveCategory({ id: selectedCategory });
+    try {
+      await openDialog({ title: "删除分类", content: "是否删除当前分类？" });
+    } catch (e) {
+      return;
+    }
+    await apiRemoveCategory({ id: selectedCategory });
     // dispatch(setCategoryAndGetBooks(null));
     // dispatch(getCategories());
+    setSelectedCategory(0);
     enqueueSnackbar("删除成功", { variant: "success" });
+    await categoryQuery.refetch();
+    closeDialog();
   };
 
   const handleSelectFile = async (file: File) => {
@@ -139,6 +151,12 @@ export default function Bookshelf(props: BookshelfProps) {
     await Promise.all([categoryQuery.refetch(), bookQuery.refetch()]);
   };
 
+  const handleCreateCategory = async (name: string) => {
+    await apiCreateCategory({ name });
+    enqueueSnackbar("successful created", { variant: "success" });
+    categoryQuery.refetch();
+  };
+
   const menuButton = !selectedCategory ? null : (
     <IconButton
       color="inherit"
@@ -151,52 +169,56 @@ export default function Bookshelf(props: BookshelfProps) {
   );
 
   return (
-    <Box className={classes.root}>
-      <AppBar component={"nav"} className={classes.appBar}>
-        <Toolbar>
-          <IconButton
-            color="inherit"
-            aria-label="open drawer"
-            edge="start"
-            className={classes.sidebarButton}
-            onClick={() => setMobileDrawerOpen(!mobileDrawerOpen)}
-          >
-            <MenuIcon />
-          </IconButton>
-          <Typography className={classes.appBarTitle} variant="h6" noWrap>
-            Bookshelf
-          </Typography>
-          {menuButton}
-          <Menu
-            open={Boolean(menuAnchor)}
-            anchorEl={menuAnchor}
-            onClose={menuClose}
-          >
-            <MenuItem onClick={handleRemoveCategory}>删除类别</MenuItem>
-          </Menu>
-        </Toolbar>
-      </AppBar>
-      {/* {drawerItem} */}
-      <BookshelfDrawer
-        mobileOpen={mobileDrawerOpen}
-        selected={selectedCategory}
-        onSelected={setSelectedCategory}
-        categories={props.categories}
-        onMobileOpenChange={setMobileDrawerOpen}
-      />
-      <Box component={"main"} className={classes.content}>
-        <Toolbar />
-        <BookList
-          categories={categories}
-          books={books}
+    <>
+      <Box className={classes.root}>
+        <AppBar component={"nav"} className={classes.appBar}>
+          <Toolbar>
+            <IconButton
+              color="inherit"
+              aria-label="open drawer"
+              edge="start"
+              className={classes.sidebarButton}
+              onClick={() => setMobileDrawerOpen(!mobileDrawerOpen)}
+            >
+              <MenuIcon />
+            </IconButton>
+            <Typography className={classes.appBarTitle} variant="h6" noWrap>
+              Bookshelf
+            </Typography>
+            {menuButton}
+            <Menu
+              open={Boolean(menuAnchor)}
+              anchorEl={menuAnchor}
+              onClose={menuClose}
+            >
+              <MenuItem onClick={handleRemoveCategory}>删除类别</MenuItem>
+            </Menu>
+          </Toolbar>
+        </AppBar>
+        {/* {drawerItem} */}
+        <BookshelfDrawer
+          mobileOpen={mobileDrawerOpen}
           selected={selectedCategory}
-          onSelectFile={handleSelectFile}
-          onAddBooksToCategory={handleAddBooksToCategory}
-          onRemoveBooksFromCategory={handleRemoveBooksFromCategory}
-          onDeleteBook={handleDeleteBook}
+          onSelected={setSelectedCategory}
+          categories={categories}
+          onMobileOpenChange={setMobileDrawerOpen}
+          onCreateCategory={handleCreateCategory}
         />
+        <Box component={"main"} className={classes.content}>
+          <Toolbar />
+          <BookList
+            categories={categories}
+            books={books}
+            selected={selectedCategory}
+            onSelectFile={handleSelectFile}
+            onAddBooksToCategory={handleAddBooksToCategory}
+            onRemoveBooksFromCategory={handleRemoveBooksFromCategory}
+            onDeleteBook={handleDeleteBook}
+          />
+        </Box>
       </Box>
-    </Box>
+      {dialog}
+    </>
   );
 }
 
