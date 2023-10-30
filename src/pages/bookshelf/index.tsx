@@ -138,6 +138,14 @@ export default function Bookshelf(props: BookshelfProps) {
     categoryId: number,
     bookId: number,
   ) => {
+    try {
+      await openDialog({
+        title: "移除书籍",
+        content: "是否从当前分类中移除书籍？",
+      });
+    } catch (e) {
+      return;
+    }
     await apiRemoveBooksFromCategory(categoryId, [bookId]);
     // dispatch(getBooks());
     enqueueSnackbar("移除成功", { variant: "success" });
@@ -154,7 +162,7 @@ export default function Bookshelf(props: BookshelfProps) {
   const handleCreateCategory = async (name: string) => {
     await apiCreateCategory({ name });
     enqueueSnackbar("successful created", { variant: "success" });
-    categoryQuery.refetch();
+    await categoryQuery.refetch();
   };
 
   const menuButton = !selectedCategory ? null : (
