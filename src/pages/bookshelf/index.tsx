@@ -111,19 +111,17 @@ export default function Bookshelf(props: BookshelfProps) {
     } catch (e) {
       return;
     }
+    closeDialog();
     await apiRemoveCategory({ id: selectedCategory });
-    // dispatch(setCategoryAndGetBooks(null));
-    // dispatch(getCategories());
     setSelectedCategory(0);
     enqueueSnackbar("删除成功", { variant: "success" });
     await categoryQuery.refetch();
-    closeDialog();
   };
 
   const handleSelectFile = async (file: File) => {
     await uploadBook(file);
-    // dispatch(getBooks());
     enqueueSnackbar("successful upload", { variant: "success" });
+    await bookQuery.refetch();
   };
 
   const handleAddBooksToCategory = async (
@@ -147,14 +145,12 @@ export default function Bookshelf(props: BookshelfProps) {
       return;
     }
     await apiRemoveBooksFromCategory(categoryId, [bookId]);
-    // dispatch(getBooks());
     enqueueSnackbar("移除成功", { variant: "success" });
     await categoryQuery.refetch();
   };
 
   const handleDeleteBook = async (bookId: number) => {
     await apiDeleteBook({ id: bookId });
-    // dispatch(getBooks());
     enqueueSnackbar("删除成功", { variant: "success" });
     await Promise.all([categoryQuery.refetch(), bookQuery.refetch()]);
   };
@@ -203,7 +199,6 @@ export default function Bookshelf(props: BookshelfProps) {
             </Menu>
           </Toolbar>
         </AppBar>
-        {/* {drawerItem} */}
         <BookshelfDrawer
           mobileOpen={mobileDrawerOpen}
           selected={selectedCategory}

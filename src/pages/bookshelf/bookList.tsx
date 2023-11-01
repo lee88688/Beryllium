@@ -194,20 +194,10 @@ export function BookList(props: BookListProps) {
     return categories.filter((item) => category !== item.id);
   }, [categories, category]);
 
-  const bookClick = (
-    id: number,
-    book: string,
-    content: string,
-    title: string,
-  ) => {
+  const bookClick = (id: number) => {
     return async () => {
-      const { data: cfi } = await apiGetBookCurrent(id);
       const query = new URLSearchParams();
-      query.set("book", book);
-      query.set("content", content);
       query.set("id", id.toString());
-      query.set("cfi", cfi);
-      query.set("title", title);
       return router.push(`/reader?${query.toString()}`);
     };
   };
@@ -306,12 +296,7 @@ export function BookList(props: BookListProps) {
             key={book.id}
             selectedCategory={category}
             book={book}
-            onClick={bookClick(
-              book.id,
-              book.fileName,
-              book.contentPath,
-              book.title,
-            )}
+            onClick={bookClick(book.id)}
             onMenuSelected={bookMenuSelected}
           />
         ))}

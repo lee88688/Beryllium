@@ -73,10 +73,13 @@ function getManifestItemFromId(book: Book, id?: string): Record<string, string> 
 function getManifestItemHrefUrl(book: Book, href: string) {
   if (!book.contentPath) return "";
   const dir = path.dirname(book.contentPath);
+  console.log('dir', dir)
   // fixme: asar-async has a bug when path is windows like, eg: OEBPS\toc.ncx
+  // when content path is file(eg. content.opf) the dirname is `.`,
+  // so use simple template `${dir}/${href}` will cause error
   // original code use `path-webpack` package
-  // return path.join(dir, href);
-  return `${dir}/${href}`
+  const relativePath = path.join(dir, href);
+  return relativePath.replaceAll('\\', '/');
 }
 
 function getMetaFromName(book: Book, name: string): string | undefined {

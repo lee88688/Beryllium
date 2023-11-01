@@ -47,8 +47,6 @@ const useStyles = makeStyles()((theme) => ({
   appBarTitle: {
     flexGrow: 1,
   },
-  // necessary for content to be below app bar
-  //   shim: theme.mixins.toolbar,
   main: {
     display: "flex",
     position: "relative",

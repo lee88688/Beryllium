@@ -18,7 +18,6 @@ export function useConfirmDialog() {
     (options: {
       title: string;
       content: string;
-      onConfirm?: () => Promise<void> | void;
     }) => {
       setTitle(options.title);
       setContent(options.content);
