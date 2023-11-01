@@ -11,26 +11,34 @@ const handler: NextApiHandler = async (req, res) => {
   const userId = req.session.user.id
   const param = req.body as DeleteBookParam
 
-  const count = await prisma.book.count({
+  const book = await prisma.book.findFirst({
     where: {
       userId,
       id: param.id
     }
   })
-  if (!count) {
+  if (!book) {
     createFailRes(res, 'book id is not found!')
     return
   }
-  await prisma.mark.deleteMany({
+  const deleteMark = prisma.mark.deleteMany({
     where: {
       bookId: param.id,
     }
   })
-  await prisma.categoryBook.deleteMany({
+  const deleteCategoryBook = prisma.categoryBook.deleteMany({
     where: {
       bookId: param.id
     }
   })
+  const deleteBook = prisma.book.delete({ where: { id: param.id }})
+
+  try {
+    await prisma.$transaction([deleteMark, deleteCategoryBook, deleteBook])
+  } catch(e) {
+    console.error(e)
+    return createFailRes(res, 'delete failed')
+  }
 
   return createSuccessRes(res, null)
 }

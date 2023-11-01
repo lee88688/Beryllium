@@ -3,7 +3,7 @@ import { createFailRes, createSuccessRes } from "y/utils/apiResponse";
 import { withSessionRoute } from "y/config";
 
 export interface LoginParam {
-  email: string;
+  username: string;
   password: string;
 }
 
@@ -11,7 +11,7 @@ export interface LoginParam {
 export default withSessionRoute(async function handler(req, res) {
   const data = req.body as LoginParam;
   const user = await prisma.user.findFirst({
-    where: { email: data.email, password: data.password },
+    where: { username: data.username, password: data.password },
     select: {
       id: true,
     },

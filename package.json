@@ -42,7 +42,6 @@
     "unzipper": "^0.10.14",
     "uuid": "^9.0.1",
     "xml2js": "^0.6.2",
-    "yup": "^1.2.0",
     "zod": "^3.21.4"
   },
   "devDependencies": {
@@ -71,7 +70,8 @@
     "prettier-plugin-tailwindcss": "^0.5.1",
     "prisma": "^5.1.1",
     "tailwindcss": "^3.3.3",
-    "typescript": "^5.1.6"
+    "typescript": "^5.1.6",
+    "zod-formik-adapter": "^1.2.0"
   },
   "ct3aMetadata": {
     "initVersion": "7.19.0"

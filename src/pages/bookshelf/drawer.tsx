@@ -2,7 +2,6 @@ import type * as Prisma from "@prisma/client";
 import { drawerWidth } from ".";
 import { makeStyles } from "y/utils/makesStyles";
 import { useState } from "react";
-import { useSnackbar } from "notistack";
 import { useRouter } from "next/router";
 import { apiLogout } from "../clientApi";
 import Divider from "@mui/material/Divider";
@@ -72,7 +71,6 @@ export function BookshelfDrawer(props: BookshelfDrawerProps) {
   const [categoryName, setCategoryName] = useState("");
   const categories = props.categories;
   const selectedCategory = props.selected;
-  const { enqueueSnackbar } = useSnackbar();
   const router = useRouter();
 
   const { classes } = useDrawerStyles();

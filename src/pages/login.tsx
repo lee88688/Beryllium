@@ -1,58 +1,55 @@
-import React from 'react';
-import { useRouter } from 'next/router'
-import Button from '@mui/material/Button';
-import TextField from '@mui/material/TextField';
-import Typography from '@mui/material/Typography';
-import Container from '@mui/material/Container';
-import FormControlLabel from '@mui/material/FormControlLabel';
-import Checkbox from '@mui/material/Checkbox';
-import { useFormik } from 'formik';
-import * as yup from 'yup';
+import React from "react";
+import { useRouter } from "next/router";
+import Button from "@mui/material/Button";
+import TextField from "@mui/material/TextField";
+import Typography from "@mui/material/Typography";
+import Container from "@mui/material/Container";
+import FormControlLabel from "@mui/material/FormControlLabel";
+import Checkbox from "@mui/material/Checkbox";
+import { useFormik } from "formik";
 import { apiLogin } from "./clientApi";
+import { toFormikValidationSchema } from "zod-formik-adapter";
+import { z } from "zod";
 
+const loginSchema = z.object({
+  username: z.string().min(1),
+  password: z.string().min(1),
+});
 
 export default function Login() {
   const router = useRouter();
 
   const formik = useFormik({
     initialValues: {
-      email: '',
-      password: ''
+      username: "",
+      password: "",
     },
-    validationSchema: yup.object().shape({
-      email: yup.string().email().required(),
-      password: yup.string().required()
-    }),
-    async onSubmit({ email, password }) {
-      await apiLogin({ email, password });
-      return router.push('/bookshelf');
-    }
+    validationSchema: toFormikValidationSchema(loginSchema),
+    async onSubmit({ username, password }) {
+      await apiLogin({ username, password });
+      return router.push("/bookshelf");
+    },
   });
 
   return (
     <Container component="main" maxWidth="xs">
-      <div className='flex flex-col items-center'>
-        {/*<Avatar className={classes.avatar}>*/}
-        {/*  <LockOutlinedIcon />*/}
-        {/*</Avatar>*/}
-
+      <div className="flex flex-col items-center">
         <Typography component="h1" variant="h5">
           用户登陆
         </Typography>
-        <form className='w-full mt-2' noValidate>
+        <form className="mt-2 w-full" noValidate>
           <TextField
-            value={formik.values.email}
+            value={formik.values.username}
             onChange={formik.handleChange}
             onBlur={formik.handleBlur}
-            error={Boolean(formik.errors.email) && formik.touched.email}
-            helperText={formik.touched.email && formik.errors.email}
+            error={Boolean(formik.errors.username) && formik.touched.username}
+            helperText={formik.touched.username && formik.errors.username}
             variant="outlined"
             margin="normal"
             required
             fullWidth
-            name="email"
-            label="电子邮箱"
-            autoComplete="email"
+            name="username"
+            label="用户名"
             autoFocus
             disabled={formik.isSubmitting}
           />
@@ -73,15 +70,15 @@ export default function Login() {
             autoComplete="current-password"
             disabled={formik.isSubmitting}
           />
-          <FormControlLabel
+          {/* <FormControlLabel
             control={<Checkbox value="remember" color="primary" />}
             label="Remember me"
-          />
+          /> */}
           <Button
             fullWidth
             variant="contained"
             color="primary"
-            className='mt-2'
+            sx={{ mt: 2 }}
             disabled={!formik.isValid}
             onClick={() => formik.handleSubmit()}
           >

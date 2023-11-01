@@ -84,6 +84,8 @@ export default function Bookshelf(props: BookshelfProps) {
     initialData: props.books,
   });
 
+  const totalBooks = bookQuery.data;
+
   const categories = categoryQuery.data;
 
   const books = useMemo(() => {
@@ -95,8 +97,8 @@ export default function Bookshelf(props: BookshelfProps) {
       );
     }
 
-    return props.books;
-  }, [categories, props.books, selectedCategory]);
+    return totalBooks;
+  }, [categories, selectedCategory, totalBooks]);
 
   const { dialog, openDialog, closeDialog } = useConfirmDialog();
 
@@ -114,7 +116,6 @@ export default function Bookshelf(props: BookshelfProps) {
     closeDialog();
     await apiRemoveCategory({ id: selectedCategory });
     setSelectedCategory(0);
-    enqueueSnackbar("删除成功", { variant: "success" });
     await categoryQuery.refetch();
   };
 
@@ -145,13 +146,20 @@ export default function Bookshelf(props: BookshelfProps) {
       return;
     }
     await apiRemoveBooksFromCategory(categoryId, [bookId]);
-    enqueueSnackbar("移除成功", { variant: "success" });
     await categoryQuery.refetch();
   };
 
   const handleDeleteBook = async (bookId: number) => {
+    try {
+      await openDialog({
+        title: "删除书籍",
+        content: "删除书籍会移除书籍相关标记和书签",
+      });
+    } catch (e) {
+      return;
+    }
     await apiDeleteBook({ id: bookId });
-    enqueueSnackbar("删除成功", { variant: "success" });
+    closeDialog();
     await Promise.all([categoryQuery.refetch(), bookQuery.refetch()]);
   };
 
