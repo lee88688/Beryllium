@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import { AutoDrawer } from "y/components/drawer";
 import AppBar from "@mui/material/AppBar";
 import Toolbar from "@mui/material/Toolbar";
 import IconButton from "@mui/material/IconButton";
@@ -16,19 +15,29 @@ import Button from "@mui/material/Button";
 import Typography from "@mui/material/Typography";
 import TextField from "@mui/material/TextField";
 import Box from "@mui/material/Box";
-import Menu from "@mui/material/Menu";
 import DeleteIcon from "@mui/icons-material/Delete";
 import Container from "@mui/material/Container";
 import ArrowBack from "@mui/icons-material/ArrowBack";
 import LoadingButton from "@mui/lab/LoadingButton";
+import Table from "@mui/material/Table";
+import TableBody from "@mui/material/TableBody";
+import TableCell from "@mui/material/TableCell";
+import TableHead from "@mui/material/TableHead";
+import TableRow from "@mui/material/TableRow";
 import { makeStyles } from "y/utils/makesStyles";
 import { useRouter } from "next/router";
 import Divider from "@mui/material/Divider";
-import { useMutation } from "@tanstack/react-query";
-import { apiChangePassword } from "./clientApi";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import {
+  apiChangePassword,
+  apiCreateUser,
+  apiDeleteUser,
+  apiUserList,
+} from "./clientApi";
 import { type GetServerSideProps } from "next";
 import { prisma } from "y/server/db";
 import { withSessionSsr } from "y/config";
+import { useConfirmDialog } from "y/hooks/useConfirmDialog";
 
 const useStyles = makeStyles()((theme) => ({
   root: {},
@@ -43,6 +52,116 @@ const useStyles = makeStyles()((theme) => ({
 type SettingProps = {
   isAdmin: boolean;
 };
+
+function AdminSetting() {
+  const [userName, setUserName] = useState("");
+  const [password, setPassword] = useState("");
+
+  const userListQuery = useQuery({
+    queryKey: ["userList"] as const,
+    queryFn: () => apiUserList().then((res) => res.data),
+  });
+
+  const userList = userListQuery.data ?? [];
+
+  const addMutation = useMutation({
+    mutationFn: () => apiCreateUser({ username: userName, password }),
+  });
+
+  const { dialog, openDialog, closeDialog } = useConfirmDialog();
+
+  return (
+    <>
+      <Card sx={{ mt: 2 }}>
+        <CardContent>
+          <Typography variant="h6" sx={{ mb: 1 }}>
+            Members
+          </Typography>
+          <List
+            subheader={
+              <ListSubheader disableGutters>Add New User</ListSubheader>
+            }
+          >
+            <ListItem disableGutters>
+              <TextField
+                label="User Name"
+                value={userName}
+                onChange={(e) => setUserName(e.target.value)}
+              />
+            </ListItem>
+            <ListItem disableGutters>
+              <TextField
+                label="Password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
+            </ListItem>
+            <ListItem disableGutters>
+              <LoadingButton
+                loading={addMutation.isLoading}
+                onClick={async () => {
+                  await addMutation.mutateAsync();
+                  setUserName("");
+                  setPassword("");
+                  await userListQuery.refetch();
+                }}
+              >
+                Add
+              </LoadingButton>
+            </ListItem>
+          </List>
+          <Divider />
+          <Table aria-label="user table">
+            <TableHead>
+              <TableRow>
+                <TableCell>ID</TableCell>
+                <TableCell>User Name</TableCell>
+                <TableCell>Admin</TableCell>
+                <TableCell align="right"></TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {userList.map((row) => (
+                <TableRow
+                  key={row.id}
+                  sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
+                >
+                  <TableCell component="th" scope="row">
+                    {row.id}
+                  </TableCell>
+                  <TableCell>{row.username}</TableCell>
+                  <TableCell>{row.isAdmin.toString()}</TableCell>
+                  <TableCell>
+                    {!row.isAdmin && (
+                      <IconButton
+                        onClick={async () => {
+                          try {
+                            await openDialog({
+                              title: "Delete User",
+                              content: `Delete user ${row.username}?`,
+                            });
+                          } catch (e) {
+                            return;
+                          }
+                          closeDialog();
+                          await apiDeleteUser({ userId: row.id });
+                          return userListQuery.refetch();
+                        }}
+                      >
+                        <DeleteIcon />
+                      </IconButton>
+                    )}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+      {dialog}
+    </>
+  );
+}
 
 export default function Setting(props: SettingProps) {
   const [password, setPassword] = useState("");
@@ -117,47 +236,7 @@ export default function Setting(props: SettingProps) {
             </CardActions>
           </Card>
 
-          {props.isAdmin && (
-            <Card className={classes.card}>
-              <CardContent>
-                <Typography variant="h6" sx={{ mb: 1 }}>
-                  Numbers
-                </Typography>
-                <List
-                  subheader={
-                    <ListSubheader disableGutters>Add New User</ListSubheader>
-                  }
-                >
-                  <ListItem disableGutters>
-                    <TextField label="User Name" />
-                  </ListItem>
-                  <ListItem disableGutters>
-                    <TextField label="Password" />
-                  </ListItem>
-                  <ListItem disableGutters>
-                    <Button>Add</Button>
-                  </ListItem>
-                </List>
-                <Divider />
-                <List
-                  subheader={
-                    <ListSubheader disableGutters>User List</ListSubheader>
-                  }
-                >
-                  <ListItem
-                    disableGutters
-                    secondaryAction={
-                      <IconButton edge="end">
-                        <DeleteIcon />
-                      </IconButton>
-                    }
-                  >
-                    <ListItemText>Name</ListItemText>
-                  </ListItem>
-                </List>
-              </CardContent>
-            </Card>
-          )}
+          {props.isAdmin && <AdminSetting />}
         </Container>
       </Box>
     </>

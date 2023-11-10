@@ -9,9 +9,9 @@ import { type CreateMarkParams } from "./api/mark/create";
 import { type GetMarkQuery } from "./api/mark";
 import { type UpdateMarkParams } from "./api/mark/update";
 import type * as Prisma from "@prisma/client";
-import { CreateUserParams } from "./api/user/create";
-import { DeleteUserParams } from "./api/user/destroy";
-import { PasswordParams } from "./api/user/password";
+import { type CreateUserParams } from "./api/user/create";
+import { type DeleteUserParams } from "./api/user/destroy";
+import { type PasswordParams } from "./api/user/password";
 
 export function apiAddBooksToCategory(data: AddBooksToCategoryParams[]) {
   return post("/api/category/addBooks", data);
@@ -100,4 +100,10 @@ export function apiDeleteUser(params: DeleteUserParams) {
 
 export function apiChangePassword(params: PasswordParams) {
   return post("/api/user/password", params);
+}
+
+export function apiUserList() {
+  return get<Pick<Prisma.User, "id" | "username" | "isAdmin">[]>(
+    "/api/user/list",
+  );
 }
