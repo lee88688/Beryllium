@@ -5,7 +5,7 @@ import List from "@mui/material/List";
 import Divider from "@mui/material/Divider";
 import Box from "@mui/material/Box";
 import { makeStyles } from "../utils/makesStyles";
-import { getColorsValue } from "./highlightEditor";
+import { Colors, getColorsValue } from "./highlightEditor";
 import IconButton from "@mui/material/IconButton";
 import MoreVert from "@mui/icons-material/MoreVert";
 import Menu from "@mui/material/Menu";
@@ -83,7 +83,7 @@ function HighlightListItem(props: HighlightListItemProps) {
           <Typography className={classes.title} variant="h6">
             <span
               className={classes.color}
-              style={{ color: getColorsValue(color) }}
+              style={{ color: getColorsValue(color as unknown as Colors) }}
             />
             <span className={classes.titleContent}>{title}</span>
           </Typography>

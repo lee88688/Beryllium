@@ -1,5 +1,6 @@
 import * as path from "path";
 import * as fs from "fs";
+import * as fsPromises from "fs/promises";
 import unzipper from "unzipper";
 import { mkdirp } from "mkdirp";
 import { asarDir, tempDir } from "y/config";
@@ -8,13 +9,13 @@ import asar from "asar";
 import { v1 as uuidv1 } from "uuid";
 import { rimraf } from "rimraf";
 import { EasyAsar, fsGetter } from "asar-async";
-import { index as asarIndexSymbol } from 'asar-async/dist/base'
-import xml2js from 'xml2js'
+import { index as asarIndexSymbol } from "asar-async/dist/base";
+import xml2js from "xml2js";
 import { fillInBaseInfo, prisma } from "../db";
 import type * as Prisma from "@prisma/client";
 
 export function asarFileDir(name: string) {
-  return path.join(asarDir, `${name}.asar`)
+  return path.join(asarDir, `${name}.asar`);
 }
 
 export async function convertEpubToAsar(
@@ -84,28 +85,36 @@ export async function saveEpubFile(userId: number, fileStream: Readable) {
   // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
   const xmlObj = await xml2js.parseStringPromise(container.toString("utf8"));
   // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-  const contentPath  = xmlObj.container.rootfiles[0].rootfile[0].$["full-path"] as string;
+  const contentPath = xmlObj.container.rootfiles[0].rootfile[0].$[
+    "full-path"
+  ] as string;
   const contentBuffer = await readAsarFile(
     asarFileDir(bookFileName),
     contentPath,
   );
-  const content = await xml2js.parseStringPromise(
+  const content = (await xml2js.parseStringPromise(
     contentBuffer.toString("utf8"),
-  ) as Record<string, string>;
+  )) as Record<string, string>;
 
   const book = {
     fileName: bookFileName,
     userId,
     contentPath,
-    current: '',
+    current: "",
     content: JSON.stringify(content),
-  } as Omit<Prisma.Book, 'id'>;
+  } as Omit<Prisma.Book, "id">;
 
   fillInBaseInfo(book);
 
   await prisma.book.create({
-    data: book
-  })
+    data: book,
+  });
 
   return book;
+}
+
+export async function deleteEpubFile(name: string) {
+  const filePath = asarFileDir(name);
+
+  await fsPromises.unlink(filePath);
 }

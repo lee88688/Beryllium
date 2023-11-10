@@ -189,7 +189,7 @@ export function BookshelfDrawer(props: BookshelfDrawerProps) {
   );
 
   return (
-    <nav className={classes.drawer} aria-label="mailbox folders">
+    <nav className={classes.drawer}>
       {/* The implementation can be swapped with js to avoid SEO duplication of links. */}
       <Hidden mdUp>
         <SwipeableDrawer

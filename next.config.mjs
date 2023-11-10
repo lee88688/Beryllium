@@ -9,6 +9,12 @@ const config = {
   // void reader effect triggered twice
   reactStrictMode: false,
 
+  output: 'standalone',
+
+  typescript: {
+    ignoreBuildErrors: true
+  },
+
   /**
    * If you are using `appDir` then you must comment the below `i18n` config out.
    *

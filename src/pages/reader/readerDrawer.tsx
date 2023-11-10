@@ -150,7 +150,7 @@ export function ReaderDrawer(props: ReaderDrawerProps) {
   );
 
   return (
-    <nav className={classes.root} aria-label="mailbox folders">
+    <nav className={classes.root}>
       {/* The implementation can be swapped with js to avoid SEO duplication of links. */}
       <Hidden mdUp>
         <SwipeableDrawer

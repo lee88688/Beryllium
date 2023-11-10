@@ -9,6 +9,9 @@ import { type CreateMarkParams } from "./api/mark/create";
 import { type GetMarkQuery } from "./api/mark";
 import { type UpdateMarkParams } from "./api/mark/update";
 import type * as Prisma from "@prisma/client";
+import { CreateUserParams } from "./api/user/create";
+import { DeleteUserParams } from "./api/user/destroy";
+import { PasswordParams } from "./api/user/password";
 
 export function apiAddBooksToCategory(data: AddBooksToCategoryParams[]) {
   return post("/api/category/addBooks", data);
@@ -85,4 +88,16 @@ export function apiUpdateMark(params: UpdateMarkParams) {
 
 export function getFileUrl(fileName: string, path: string) {
   return `/api/book/file/${fileName}/${path}`;
+}
+
+export function apiCreateUser(user: CreateUserParams) {
+  return post("/api/user/create", user);
+}
+
+export function apiDeleteUser(params: DeleteUserParams) {
+  return post("/api/user/destroy", params);
+}
+
+export function apiChangePassword(params: PasswordParams) {
+  return post("/api/user/password", params);
 }

@@ -1,9 +1,13 @@
-import type {NextApiResponse} from 'next'
+import type { NextApiResponse } from "next";
 
 export function createSuccessRes<T>(res: NextApiResponse, data: T) {
-  res.json({ isSuccess: true, data })
+  res.json({ isSuccess: true, data });
 }
 
-export function createFailRes(res: NextApiResponse, message: string) {
-  res.json({ isSuccess: false, message })
+export function createFailRes(
+  res: NextApiResponse,
+  message: string,
+  error?: unknown,
+) {
+  res.json({ isSuccess: false, message, error });
 }
