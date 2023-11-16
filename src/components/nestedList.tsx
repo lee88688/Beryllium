@@ -1,5 +1,4 @@
 import React, { useState, useRef, useContext } from "react";
-import isFunction from "lodash/isFunction";
 import { makeStyles } from "../utils/makesStyles";
 import List from "@mui/material/List";
 import ListItemButton from "@mui/material/ListItemButton";
@@ -36,17 +35,20 @@ export type NestedListItemClick = (
 ) => void;
 
 type NestedListItemProps = {
+  seletecd: string;
   level: number;
   data: NestedItemData;
-  onClick: NestedListItemClick;
+  onClick?: NestedListItemClick;
 };
 
 function NestedListItem(props: NestedListItemProps) {
-  const { level, data: { label, children } = {} } = props;
+  const {
+    level,
+    data: { label, src, children },
+  } = props;
   const { classes } = useItemStyles(props);
   const [open, setOpen] = useState(false);
-  const { selected, setSelected } = useContext(NestedListContext);
-  const key = `${level}-${label}`;
+  const key = src;
 
   const handleExpand = () => {
     setOpen(!open);
@@ -54,17 +56,14 @@ function NestedListItem(props: NestedListItemProps) {
 
   const handleClick = () => {
     const { onClick, data } = props;
-    setSelected(key);
-    if (isFunction(onClick)) {
-      onClick({ ...data, level });
-    }
+    onClick?.({ ...data, level });
   };
 
   if (Array.isArray(children) && children.length) {
     return (
       <React.Fragment>
         <ListItemButton
-          selected={selected === key}
+          selected={props.seletecd === key}
           className={classes.nested}
           onClick={handleClick}
         >
@@ -85,9 +84,10 @@ function NestedListItem(props: NestedListItemProps) {
         </ListItemButton>
         <Collapse in={open} timeout="auto" unmountOnExit>
           <List component="div" disablePadding>
-            {children.map((item, index) => (
+            {children.map((item) => (
               <NestedListItem
-                key={`${level}-${index}-${item.label}`}
+                key={item.src}
+                seletecd={props.seletecd}
                 data={item}
                 level={level + 1}
                 onClick={props.onClick}
@@ -100,7 +100,7 @@ function NestedListItem(props: NestedListItemProps) {
   }
   return (
     <ListItemButton
-      selected={key === selected}
+      selected={key === props.seletecd}
       className={classes.nested}
       onClick={handleClick}
     >
@@ -110,6 +110,7 @@ function NestedListItem(props: NestedListItemProps) {
 }
 
 type NestedListProps = {
+  selected: string;
   data: Array<NestedItemData>;
   onClick: NestedListItemClick;
 };
@@ -119,12 +120,17 @@ export function NestedList(props: NestedListProps) {
   const level = useRef(0);
   const [selected, setSelected] = useState("");
 
+  if (selected !== props.selected) {
+    setSelected(props.selected);
+  }
+
   return (
     <NestedListContext.Provider value={{ selected, setSelected }}>
       <List component="nav">
-        {data.map((item, index) => (
+        {data.map((item) => (
           <NestedListItem
-            key={`${level.current}-${index}-${item.label}`}
+            key={item.src}
+            seletecd={selected}
             data={item}
             level={level.current}
             onClick={onClick}

@@ -93,6 +93,8 @@ type ReaderProps = {
 } & Pick<Prisma.Book, "title" | "current" | "fileName" | "contentPath">;
 
 export default function Reader(props: ReaderProps) {
+  const [currentTocItem, setCurrentTocItem] = useState("");
+
   const { classes, cx } = useStyles();
   const router = useRouter();
   const query = router.query;
@@ -114,6 +116,7 @@ export default function Reader(props: ReaderProps) {
 
   const refetchHighlightList = useCallback(() => {
     return highlightListQuery.refetch();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const bookmarkListQuery = useQuery({
@@ -135,6 +138,7 @@ export default function Reader(props: ReaderProps) {
     bookId: id,
     startCfi: cfi,
     onHighlightRefetch: refetchHighlightList,
+    onLocationChange: setCurrentTocItem,
   });
   const [menuAnchorEl, setMenuAnchorEl] = useState(null);
 
@@ -178,6 +182,7 @@ export default function Reader(props: ReaderProps) {
 
   const handleTocClick = useCallback<NestedListItemClick>(
     ({ src }) => {
+      setCurrentTocItem(src);
       return epubReaderRef.current?.display(src);
     },
     [epubReaderRef],
@@ -231,6 +236,7 @@ export default function Reader(props: ReaderProps) {
       <ReaderDrawer
         id={id}
         open={drawerOpen}
+        currentTocItem={currentTocItem}
         tocData={props.tocData}
         bookmarks={bookmarkList}
         highlights={highlightList}

@@ -81,6 +81,7 @@ const useDrawerStyles = makeStyles()((theme) => ({
 type ReaderDrawerProps = {
   id: number;
   open: boolean;
+  currentTocItem: string;
   tocData: NestedItemData[];
   bookmarks: Prisma.Mark[];
   highlights: Prisma.Mark[];
@@ -96,6 +97,7 @@ export function ReaderDrawer(props: ReaderDrawerProps) {
     tocData,
     bookmarks,
     highlights,
+    currentTocItem,
     onDrawerClose,
     onClickToc,
     onClickHighlight,
@@ -107,8 +109,14 @@ export function ReaderDrawer(props: ReaderDrawerProps) {
   const { classes } = useDrawerStyles();
 
   const tocItem = useMemo(
-    () => <NestedList data={tocData} onClick={onClickToc} />,
-    [tocData, onClickToc],
+    () => (
+      <NestedList
+        selected={currentTocItem}
+        data={tocData}
+        onClick={onClickToc}
+      />
+    ),
+    [tocData, onClickToc, currentTocItem],
   );
 
   const container =

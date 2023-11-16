@@ -1,6 +1,11 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-import ePub, { type Rendition, type Contents, type Book } from "epubjs";
+import ePub, {
+  type Rendition,
+  type Contents,
+  type Book,
+  EpubCFI,
+} from "epubjs";
 import { type Annotation } from "epubjs/types/annotations";
 import type * as Prisma from "@prisma/client";
 import EventEmitter from "eventemitter3";
@@ -9,11 +14,11 @@ import { EpubAnnotationType } from "./constants";
 import pick from "lodash/pick";
 import { type DisplayedLocation } from "epubjs/types/rendition";
 
-declare module "epubjs/types/rendition" {
-  interface DisplayedLocation {}
-}
+declare module "epubjs/types/rendition" {}
 
-export class EpubReader extends EventEmitter<"selected" | "markClicked"> {
+export class EpubReader extends EventEmitter<
+  "selected" | "markClicked" | "relocated"
+> {
   book: Book;
   rendition: Rendition;
 
@@ -67,6 +72,9 @@ export class EpubReader extends EventEmitter<"selected" | "markClicked"> {
 
     this.rendition.on("selected", this.handleSelected);
     this.rendition.on("markClicked", this.handleMarkClicked);
+    this.rendition.on("relocated", (location: Location) =>
+      this.emit("relocated", location),
+    );
   }
 
   display(target: string | number) {
@@ -132,5 +140,9 @@ export class EpubReader extends EventEmitter<"selected" | "markClicked"> {
 
   getRange(cfi: string) {
     return this.rendition.getRange(cfi);
+  }
+
+  destroy() {
+    this.book.destroy();
   }
 }

@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
-import ePub, { type Rendition, type Contents } from "epubjs";
+import ePub, { type Rendition, type Contents, type Location } from "epubjs";
 import { EpubCFI } from "epubjs";
 import Popper, { type PopperProps } from "@mui/material/Popper";
 import {
@@ -24,6 +24,7 @@ type UseReaderProps = {
   startCfi: string;
   highlightList: Prisma.Mark[];
   onHighlightRefetch: () => void;
+  onLocationChange: (href: string) => void;
 };
 
 type EditorValue = Omit<Prisma.Mark, "id" | "userId"> & { id?: number };
@@ -44,6 +45,7 @@ export function useReader({
   startCfi,
   highlightList,
   onHighlightRefetch,
+  onLocationChange,
 }: UseReaderProps) {
   const epubReaderRef = useRef<EpubReader>();
 
@@ -122,13 +124,25 @@ export function useReader({
     [],
   );
 
+  const handleRelocated = useCallback(
+    (location: Location) => {
+      onLocationChange(location.start.href);
+    },
+    [onLocationChange],
+  );
+
   useEffect(() => {
-    epubReaderRef.current = new EpubReader(opfUrl, "viewer");
+    const epubReader = new EpubReader(opfUrl, "viewer");
+    epubReaderRef.current = epubReader;
+    window.epubReader = epubReaderRef.current;
     // when book has no current, it is empty string
     void epubReaderRef.current.display(startCfi || 0);
     epubReaderRef.current.on("selected", handleSelected);
     epubReaderRef.current.on("markClicked", handleMarkClick);
-  }, []);
+    epubReaderRef.current.on("relocated", handleRelocated);
+
+    return () => epubReader.destroy();
+  }, [handleMarkClick, handleRelocated, handleSelected, opfUrl, startCfi]);
 
   useEffect(() => {
     highlightList.forEach((item) => {

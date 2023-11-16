@@ -136,7 +136,7 @@ export function BookshelfDrawer(props: BookshelfDrawerProps) {
       </List>
       <Divider />
       <List>
-        <ListItemButton>
+        <ListItemButton onClick={() => router.push("/setting")}>
           <ListItemIcon>
             <Settings />
           </ListItemIcon>
