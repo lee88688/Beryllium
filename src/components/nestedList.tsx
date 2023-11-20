@@ -1,4 +1,4 @@
-import React, { useState, useRef, useContext } from "react";
+import React, { useState, useRef } from "react";
 import { makeStyles } from "../utils/makesStyles";
 import List from "@mui/material/List";
 import ListItemButton from "@mui/material/ListItemButton";
@@ -50,11 +50,12 @@ function NestedListItem(props: NestedListItemProps) {
   const [open, setOpen] = useState(false);
   const key = src;
 
-  const handleExpand = () => {
+  const handleExpand: React.MouseEventHandler<HTMLButtonElement> = (e) => {
+    e.stopPropagation();
     setOpen(!open);
   };
 
-  const handleClick = () => {
+  const handleClick: React.MouseEventHandler<HTMLElement> = () => {
     const { onClick, data } = props;
     onClick?.({ ...data, level });
   };
