@@ -156,7 +156,6 @@ export default function Reader(props: ReaderProps) {
     const title = range.startContainer
       ? getElementHeading(range.startContainer as HTMLElement)
       : "";
-    console.log("current cfi", location);
     await addMark({
       bookId: id,
       type: MarkType.Bookmark,
@@ -167,7 +166,6 @@ export default function Reader(props: ReaderProps) {
       content: "",
     });
     await bookmarkListQuery.refetch();
-    // dispatch(getBookmarkList(id));
   };
 
   const goBack = async () => {
