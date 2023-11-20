@@ -76,18 +76,27 @@ export function useReader({
     epubReaderRef.current?.updateHighlight(value);
   }, []);
 
+  const clearHighlightEditor = useCallback(
+    (hidden?: boolean) => {
+      anchorEl.current = undefined;
+      setOpenPopover(hidden ?? false);
+      setCurEditorValue(EMPTY_EDITOR_VALUE(bookId));
+    },
+    [bookId],
+  );
+
   const handleSelected = useCallback(
     (epubcfi: string, range: Range, rect: DOMRect, contents: Contents) => {
+      const currentWindow = contents.window;
+      // when user changes again, temporarily disable editor and show when user stops
       const handleSelectionChange = () => {
-        contents.window.removeEventListener(
+        currentWindow.document.removeEventListener(
           "selectionchange",
           handleSelectionChange,
         );
-        anchorEl.current = undefined;
-        setOpenPopover(false);
-        setCurEditorValue(EMPTY_EDITOR_VALUE(bookId));
+        clearHighlightEditor();
       };
-      contents.window.addEventListener(
+      contents.window.document.addEventListener(
         "selectionchange",
         handleSelectionChange,
       );
@@ -112,7 +121,7 @@ export function useReader({
       });
       setOpenPopover(true);
     },
-    [bookId],
+    [clearHighlightEditor],
   );
 
   const handleMarkClick = useCallback(
@@ -148,28 +157,27 @@ export function useReader({
     highlightList.forEach((item) => {
       epubReaderRef.current?.addHighlight(item);
     });
+    // todo: temporarily omit this, and add highlightList check later
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const addMarkMutate = addMarkMutation.mutateAsync;
   const handleEditorChange = useCallback(
     (value: EditorValue) => {
       if (!value.id) {
         // create new highlight
-        console.log("current editor value", value);
-        addMarkMutation
-          .mutateAsync(value)
-          .then((res) => {
-            setCurEditorValue((val) => {
-              const value = { ...val, id: res.data };
-              epubReaderRef.current?.addHighlight(value);
+        void addMarkMutate(value).then((res) => {
+          setCurEditorValue((val) => {
+            const value = { ...val, id: res.data };
+            epubReaderRef.current?.addHighlight(value);
 
-              return value;
-            });
-          })
-          .catch((e) => console.error(e));
+            return value;
+          });
+        });
       }
       setCurEditorValue(value);
     },
-    [addMarkMutation.mutateAsync],
+    [addMarkMutate],
   );
 
   const handleEditorCancel = useCallback(() => {
@@ -178,12 +186,13 @@ export function useReader({
     setOpenPopover(false);
   }, [updateHighlightElement]);
 
+  const updateMarkMutate = updateMarkMutation.mutateAsync;
   const handleConfirm = useCallback(
     async (value: EditorValue) => {
       const val = { ...curEditorValue, ...value };
       if (!val.id) return;
 
-      await updateMarkMutation.mutateAsync(val);
+      await updateMarkMutate(val);
       updateHighlightElement(value);
       setOpenPopover(false);
       onHighlightRefetch();
@@ -192,21 +201,22 @@ export function useReader({
       curEditorValue,
       onHighlightRefetch,
       updateHighlightElement,
-      updateMarkMutation.mutateAsync,
+      updateMarkMutate,
     ],
   );
 
+  const removeMutate = removeMutation.mutateAsync;
   const handleRemove = useCallback(
     async (value: EditorValue) => {
       const { id, epubcfi } = { ...curEditorValue, ...value };
       if (!id) return;
 
-      await removeMutation.mutateAsync(id);
+      await removeMutate(id);
       setOpenPopover(false);
       epubReaderRef.current?.removeHighlight(epubcfi);
       onHighlightRefetch();
     },
-    [curEditorValue, onHighlightRefetch, removeMutation.mutateAsync],
+    [curEditorValue, onHighlightRefetch, removeMutate],
   );
 
   const bookItem = (
@@ -228,9 +238,11 @@ export function useReader({
     bookItem,
     epubReaderRef,
     nextPage: () => {
+      clearHighlightEditor();
       return epubReaderRef.current?.next();
     },
     prevPage: () => {
+      clearHighlightEditor();
       return epubReaderRef.current?.prev();
     },
   };
