@@ -1,11 +1,22 @@
+import { createHash } from "node:crypto";
 import { prisma } from "../db";
 import { deleteEpubFile } from "./file";
 
-export async function createUser(user: { username: string; password: string }) {
+export function getPasswordHash(password: string) {
+  const hash = createHash("sha256");
+  return hash.update(password).digest("hex");
+}
+
+export async function createUser(user: {
+  username: string;
+  password: string;
+  isAdmin?: boolean;
+}) {
   return prisma.user.create({
     data: {
       ...user,
-      isAdmin: false,
+      password: getPasswordHash(user.password),
+      isAdmin: user.isAdmin ?? false,
     },
   });
 }

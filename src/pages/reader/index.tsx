@@ -169,7 +169,7 @@ export default function Reader(props: ReaderProps) {
   };
 
   const goBack = async () => {
-    router.back();
+    void router.push("/bookshelf");
     if (!epubReaderRef.current) return;
 
     const location = await epubReaderRef.current?.currentLocation();

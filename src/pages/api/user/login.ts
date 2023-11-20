@@ -3,6 +3,7 @@ import { createFailRes, createSuccessRes } from "y/utils/apiResponse";
 import { type NextApiHandler } from "next";
 import { withIronSessionApiRoute } from "iron-session/next";
 import { ironOptions } from "y/config";
+import { getPasswordHash } from "y/server/service/user";
 
 export interface LoginParam {
   username: string;
@@ -12,8 +13,9 @@ export interface LoginParam {
 // TODO: password should encrypt
 const handler: NextApiHandler = async (req, res) => {
   const data = req.body as LoginParam;
+  const password = getPasswordHash(data.password);
   const user = await prisma.user.findFirst({
-    where: { username: data.username, password: data.password },
+    where: { username: data.username, password },
     select: {
       id: true,
     },
