@@ -1,4 +1,10 @@
-import React, { useState, useRef } from "react";
+import React, {
+  useState,
+  useRef,
+  useMemo,
+  useCallback,
+  useContext,
+} from "react";
 import { makeStyles } from "../utils/makesStyles";
 import List from "@mui/material/List";
 import ListItemButton from "@mui/material/ListItemButton";
@@ -11,8 +17,9 @@ import ExpandMore from "@mui/icons-material/ExpandMore";
 
 const NestedListContext = React.createContext({
   selected: "",
-  // eslint-disable-next-line @typescript-eslint/no-empty-function
-  setSelected: (() => {}) as (key: string) => void,
+  onSelected: (() => {
+    /* empty */
+  }) as NestedListItemClick,
 });
 
 const useItemStyles = makeStyles<{ level?: number }>()(
@@ -25,6 +32,7 @@ const useItemStyles = makeStyles<{ level?: number }>()(
 );
 
 export type NestedItemData = {
+  open?: boolean;
   label: string;
   src: string;
   children?: NestedItemData[];
@@ -35,10 +43,8 @@ export type NestedListItemClick = (
 ) => void;
 
 type NestedListItemProps = {
-  seletecd: string;
   level: number;
   data: NestedItemData;
-  onClick?: NestedListItemClick;
 };
 
 function NestedListItem(props: NestedListItemProps) {
@@ -47,8 +53,18 @@ function NestedListItem(props: NestedListItemProps) {
     data: { label, src, children },
   } = props;
   const { classes } = useItemStyles(props);
-  const [open, setOpen] = useState(false);
-  const key = src;
+  const [open, setOpen] = useState(props.data.open ?? false);
+
+  const { selected, onSelected } = useContext(NestedListContext);
+
+  // when prop open change, update state
+  // when this happens, the origin data or selected may change
+  const previousPropOpenRef = useRef(open);
+  const propOpen = Boolean(props.data.open);
+  if (previousPropOpenRef.current !== propOpen) {
+    setOpen(propOpen);
+    previousPropOpenRef.current = propOpen;
+  }
 
   const handleExpand: React.MouseEventHandler<HTMLButtonElement> = (e) => {
     e.stopPropagation();
@@ -56,15 +72,14 @@ function NestedListItem(props: NestedListItemProps) {
   };
 
   const handleClick: React.MouseEventHandler<HTMLElement> = () => {
-    const { onClick, data } = props;
-    onClick?.({ ...data, level });
+    onSelected({ ...props.data, level });
   };
 
   if (Array.isArray(children) && children.length) {
     return (
       <React.Fragment>
         <ListItemButton
-          selected={props.seletecd === key}
+          selected={selected === src}
           className={classes.nested}
           onClick={handleClick}
         >
@@ -86,13 +101,7 @@ function NestedListItem(props: NestedListItemProps) {
         <Collapse in={open} timeout="auto" unmountOnExit>
           <List component="div" disablePadding>
             {children.map((item) => (
-              <NestedListItem
-                key={item.src}
-                seletecd={props.seletecd}
-                data={item}
-                level={level + 1}
-                onClick={props.onClick}
-              />
+              <NestedListItem key={item.src} data={item} level={level + 1} />
             ))}
           </List>
         </Collapse>
@@ -101,7 +110,7 @@ function NestedListItem(props: NestedListItemProps) {
   }
   return (
     <ListItemButton
-      selected={key === props.seletecd}
+      selected={src === selected}
       className={classes.nested}
       onClick={handleClick}
     >
@@ -117,25 +126,59 @@ type NestedListProps = {
 };
 
 export function NestedList(props: NestedListProps) {
-  const { data = [], onClick } = props;
+  const { onClick } = props;
   const level = useRef(0);
   const [selected, setSelected] = useState("");
 
-  if (selected !== props.selected) {
+  // should use props.selected to re-generate open state.
+  // click item in sub-list may not change props.selected outside.
+  const dataWithOpen = useMemo(() => {
+    const fn = (data: Array<NestedItemData>) => {
+      let isOpen = false;
+      const newChildren = data.map((item) => {
+        const newItem: NestedItemData = {
+          ...item,
+          open: props.selected === item.src,
+        };
+        if (item.children) {
+          const [isSomeChildrenOpen, newChildren] = fn(item.children);
+          newItem.children = newChildren;
+          newItem.open = isSomeChildrenOpen;
+        }
+
+        if (!isOpen && newItem.open) {
+          isOpen = newItem.open;
+        }
+
+        return newItem;
+      });
+
+      return [isOpen, newChildren] as const;
+    };
+
+    return fn(props.data)[1];
+  }, [props.data, props.selected]);
+
+  // when props.selected changes, update current selected
+  const previousPropSelectedRef = useRef(props.selected);
+  if (previousPropSelectedRef.current !== props.selected) {
     setSelected(props.selected);
+    previousPropSelectedRef.current = props.selected;
   }
 
+  const onSelected = useCallback<NestedListItemClick>(
+    (item) => {
+      setSelected(item.src);
+      onClick(item);
+    },
+    [onClick],
+  );
+
   return (
-    <NestedListContext.Provider value={{ selected, setSelected }}>
+    <NestedListContext.Provider value={{ selected, onSelected }}>
       <List component="nav">
-        {data.map((item) => (
-          <NestedListItem
-            key={item.src}
-            seletecd={selected}
-            data={item}
-            level={level.current}
-            onClick={onClick}
-          />
+        {dataWithOpen.map((item) => (
+          <NestedListItem key={item.src} data={item} level={level.current} />
         ))}
       </List>
     </NestedListContext.Provider>

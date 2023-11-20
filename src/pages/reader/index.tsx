@@ -182,7 +182,8 @@ export default function Reader(props: ReaderProps) {
 
   const handleTocClick = useCallback<NestedListItemClick>(
     ({ src }) => {
-      setCurrentTocItem(src);
+      // do not update, keep current nest list's open state
+      // setCurrentTocItem(src);
       return epubReaderRef.current?.display(src);
     },
     [epubReaderRef],
