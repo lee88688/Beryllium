@@ -9,6 +9,8 @@ import ArrowBackIosIcon from "@mui/icons-material/ArrowBackIos";
 import BookmarkBorderIcon from "@mui/icons-material/BookmarkBorder";
 import MenuOpenIcon from "@mui/icons-material/MenuOpen";
 import ArrowBack from "@mui/icons-material/ArrowBack";
+import { useTheme } from "@mui/material/styles";
+import useMediaQuery from "@mui/material/useMediaQuery";
 import { makeStyles } from "y/utils/makesStyles";
 import { useReader } from "./epubReader";
 import {
@@ -20,7 +22,6 @@ import {
 import { ReaderDrawer, drawerWidth, viewBreakPoint } from "./readerDrawer";
 import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
-import MoreVert from "@mui/icons-material/MoreVert";
 import truncate from "lodash/truncate";
 import { addMark } from "../clientApi";
 import type * as Prisma from "@prisma/client";
@@ -104,6 +105,9 @@ export default function Reader(props: ReaderProps) {
   const bookFileName = props.fileName;
   const content = props.contentPath;
   const contentUrl = getFileUrl(bookFileName, content);
+
+  const theme = useTheme();
+  const isSmDown = useMediaQuery(theme.breakpoints.down("sm"));
 
   const highlightListQuery = useQuery({
     queryKey: ["getMark", id, MarkType.Highlight] as const,
@@ -215,13 +219,15 @@ export default function Reader(props: ReaderProps) {
           <IconButton edge="end" color="inherit" onClick={addBookmark}>
             <BookmarkBorderIcon />
           </IconButton>
-          <IconButton
-            edge="end"
-            color="inherit"
-            onClick={() => setDrawerOpen(true)}
-          >
-            <MenuOpenIcon />
-          </IconButton>
+          {isSmDown && (
+            <IconButton
+              edge="end"
+              color="inherit"
+              onClick={() => setDrawerOpen(true)}
+            >
+              <MenuOpenIcon />
+            </IconButton>
+          )}
           <Menu
             anchorEl={menuAnchorEl}
             open={Boolean(menuAnchorEl)}
