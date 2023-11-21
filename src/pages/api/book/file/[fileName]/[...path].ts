@@ -1,5 +1,5 @@
 import type { NextApiHandler } from "next";
-import { withSessionRoute } from "y/config";
+import { withSessionRoute } from "y/server/wrap";
 import { asarFileDir, readAsarFile } from "y/server/service/file";
 import mime from "mime-types";
 

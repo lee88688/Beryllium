@@ -26,7 +26,7 @@ import { addMark } from "../clientApi";
 import type * as Prisma from "@prisma/client";
 import { MarkType } from "y/utils/constants";
 import { type GetServerSidePropsResult, type GetServerSideProps } from "next";
-import { withSessionSsr } from "y/config";
+import { withSessionSsr } from "y/server/wrap";
 import { prisma } from "y/server/db";
 import groupBy from "lodash/groupBy";
 import { getBookToc } from "y/server/service/book";

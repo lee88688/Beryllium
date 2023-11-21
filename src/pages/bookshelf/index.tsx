@@ -21,7 +21,7 @@ import type * as Prisma from "@prisma/client";
 import { apiRemoveCategory } from "../clientApi";
 import { type GetServerSideProps } from "next";
 import { prisma } from "y/server/db";
-import { withSessionSsr } from "y/config";
+import { withSessionSsr } from "y/server/wrap";
 import { useSnackbar } from "notistack";
 import { makeStyles } from "y/utils/makesStyles";
 import { useQuery } from "@tanstack/react-query";

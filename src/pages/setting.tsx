@@ -36,7 +36,7 @@ import {
 } from "./clientApi";
 import { type GetServerSideProps } from "next";
 import { prisma } from "y/server/db";
-import { withSessionSsr } from "y/config";
+import { withSessionSsr } from "y/server/wrap";
 import { useConfirmDialog } from "y/hooks/useConfirmDialog";
 
 const useStyles = makeStyles()((theme) => ({

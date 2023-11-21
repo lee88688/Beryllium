@@ -2,7 +2,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-return */
-import * as path from "path";
+import * as path from "node:path";
 import { PrismaClient } from "@prisma/client";
 import type * as Prisma from "@prisma/client";
 import { env } from "y/env.mjs";
@@ -59,7 +59,10 @@ export const prisma =
 
 type Book = Prisma.Book & { contentObject: any; contentMetadata: any };
 
-function getManifestItemFromId(book: Book, id?: string): Record<string, string> | undefined {
+function getManifestItemFromId(
+  book: Book,
+  id?: string,
+): Record<string, string> | undefined {
   if (!id) return;
 
   const { contentObject: { package: p } = {} } = book;
@@ -73,13 +76,13 @@ function getManifestItemFromId(book: Book, id?: string): Record<string, string> 
 function getManifestItemHrefUrl(book: Book, href: string) {
   if (!book.contentPath) return "";
   const dir = path.dirname(book.contentPath);
-  console.log('dir', dir)
+  console.log("dir", dir);
   // fixme: asar-async has a bug when path is windows like, eg: OEBPS\toc.ncx
   // when content path is file(eg. content.opf) the dirname is `.`,
   // so use simple template `${dir}/${href}` will cause error
   // original code use `path-webpack` package
   const relativePath = path.join(dir, href);
-  return relativePath.replaceAll('\\', '/');
+  return relativePath.replaceAll("\\", "/");
 }
 
 function getMetaFromName(book: Book, name: string): string | undefined {
@@ -107,21 +110,21 @@ function getMetadataFromKey(book: Book, key: string) {
     : "";
 }
 
-export function fillInBaseInfo(book: Omit<Prisma.Book, 'id'>) {
+export function fillInBaseInfo(book: Omit<Prisma.Book, "id">) {
   if (!book.content) {
     return;
   }
 
-  const contentObject = getContentObject(book.content)
-  const contentMetadata = getContentMetadata(contentObject)
+  const contentObject = getContentObject(book.content);
+  const contentMetadata = getContentMetadata(contentObject);
   const resultBook = new Proxy(book, {
     get(target, prop, receiver) {
-      if (prop === 'contentObject') return contentObject
-      else if (prop === 'contentMetadata') return contentMetadata
+      if (prop === "contentObject") return contentObject;
+      else if (prop === "contentMetadata") return contentMetadata;
 
-      return Reflect.get(target, prop, receiver)
-    }
-  }) as Book
+      return Reflect.get(target, prop, receiver);
+    },
+  }) as Book;
 
   book.title = getMetadataFromKey(resultBook, "title");
   book.description = getMetadataFromKey(resultBook, "description");
@@ -130,7 +133,7 @@ export function fillInBaseInfo(book: Omit<Prisma.Book, 'id'>) {
   const coverId = getMetaFromName(resultBook, "cover");
   const coverItem = getManifestItemFromId(resultBook, coverId);
   if (!coverItem) {
-    book.cover = ''
+    book.cover = "";
     return;
   }
   book.cover = getManifestItemHrefUrl(resultBook, coverItem.href);

@@ -1,6 +1,5 @@
 import type { IronSessionOptions } from "iron-session";
-import type { NextApiHandler, GetServerSideProps } from "next";
-import { withIronSessionApiRoute, withIronSessionSsr } from "iron-session/next";
+import { env } from "y/env.mjs";
 
 declare module "iron-session" {
   interface IronSessionData {
@@ -19,32 +18,5 @@ export const ironOptions: IronSessionOptions = {
   //   },
 };
 
-export const asarDir = process.env.ASAR_DIR ?? "";
-export const tempDir = process.env.TEMP_DIR ?? "";
-
-export function withSessionRoute(handler: NextApiHandler) {
-  const sessionCheckHandler: NextApiHandler = (req, res) => {
-    if (!req.session.user) {
-      return res.status(401).json({ isSuccess: false, message: "Unauthrized" });
-    }
-    return handler(req, res);
-  };
-  return withIronSessionApiRoute(sessionCheckHandler, ironOptions);
-}
-
-export function withSessionSsr<Props extends Record<string, unknown>>(
-  handler: GetServerSideProps<Props>,
-) {
-  const sessionCheckHandler: GetServerSideProps<Props> = async (params) => {
-    if (!params.req.session.user) {
-      return {
-        redirect: {
-          permanent: false,
-          destination: "/login",
-        },
-      };
-    }
-    return handler(params);
-  };
-  return withIronSessionSsr(sessionCheckHandler, ironOptions);
-}
+export const asarDir = env.ASAR_DIR;
+export const tempDir = env.TEMP_DIR;

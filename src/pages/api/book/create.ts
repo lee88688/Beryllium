@@ -1,39 +1,39 @@
 import type { NextApiHandler, PageConfig } from "next";
-import { withSessionRoute } from "y/config";
+import { withSessionRoute } from "y/server/wrap";
 import { createSuccessRes } from "y/utils/apiResponse";
 import formidable from "formidable";
 import { saveEpubFile } from "y/server/service/file";
-import { Readable } from 'stream'
+import { Readable } from "stream";
 
 export const config: PageConfig = {
   api: {
-    bodyParser: false
-  }
-}
+    bodyParser: false,
+  },
+};
 
 const handler: NextApiHandler = async (req, res) => {
-  const userId = req.session.user.id
+  const userId = req.session.user.id;
 
   const form = formidable({});
-  let cacheData = Buffer.alloc(0)
+  let cacheData = Buffer.alloc(0);
   form.onPart = (part) => {
     if (part.originalFilename) {
-      console.log('form file', part.originalFilename)
-      part.on('data', (chunk: Buffer) => {
-        cacheData = Buffer.concat([cacheData, chunk])
-      })
+      console.log("form file", part.originalFilename);
+      part.on("data", (chunk: Buffer) => {
+        cacheData = Buffer.concat([cacheData, chunk]);
+      });
     }
   };
 
-  await form.parse(req)
+  await form.parse(req);
 
   // create readable from part data
-  const readable = Readable.from(cacheData)
-  await saveEpubFile(userId, readable).catch(e => {
-    console.error(e)
-  })
+  const readable = Readable.from(cacheData);
+  await saveEpubFile(userId, readable).catch((e) => {
+    console.error(e);
+  });
 
-  createSuccessRes(res, null)
+  createSuccessRes(res, null);
 };
 
 export default withSessionRoute(handler);

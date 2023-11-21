@@ -1,7 +1,10 @@
-import type { NextApiHandler } from "next";
+import type { GetServerSideProps, NextApiHandler } from "next";
 import { isAdmin } from "./service/user";
 import { type ZodTypeAny, type ZodError } from "zod";
 import { createFailRes } from "y/utils/apiResponse";
+import { withIronSessionApiRoute } from "iron-session/next";
+import { withIronSessionSsr } from "iron-session/next";
+import { ironOptions } from "y/config";
 
 export const withAdmin = (handler: NextApiHandler): NextApiHandler => {
   const fn: NextApiHandler = async (req, res) => {
@@ -46,3 +49,30 @@ export const withValidate = <T extends ZodTypeAny, K extends ZodTypeAny>(
 
   return fn;
 };
+
+export function withSessionRoute(handler: NextApiHandler) {
+  const sessionCheckHandler: NextApiHandler = (req, res) => {
+    if (!req.session.user) {
+      return res.status(401).json({ isSuccess: false, message: "Unauthrized" });
+    }
+    return handler(req, res);
+  };
+  return withIronSessionApiRoute(sessionCheckHandler, ironOptions);
+}
+
+export function withSessionSsr<Props extends Record<string, unknown>>(
+  handler: GetServerSideProps<Props>,
+) {
+  const sessionCheckHandler: GetServerSideProps<Props> = async (params) => {
+    if (!params.req.session.user) {
+      return {
+        redirect: {
+          permanent: false,
+          destination: "/login",
+        },
+      };
+    }
+    return handler(params);
+  };
+  return withIronSessionSsr(sessionCheckHandler, ironOptions);
+}

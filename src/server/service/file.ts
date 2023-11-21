@@ -1,10 +1,10 @@
-import * as path from "path";
-import * as fs from "fs";
-import * as fsPromises from "fs/promises";
+import * as path from "node:path";
+import * as fs from "node:fs";
+import * as fsPromises from "node:fs/promises";
 import unzipper from "unzipper";
 import { mkdirp } from "mkdirp";
 import { asarDir, tempDir } from "y/config";
-import { type Readable } from "stream";
+import { type Readable } from "node:stream";
 import asar from "asar";
 import { v1 as uuidv1 } from "uuid";
 import { rimraf } from "rimraf";

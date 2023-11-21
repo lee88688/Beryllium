@@ -1,5 +1,5 @@
 import type { NextApiHandler } from "next";
-import { withSessionRoute } from "y/config";
+import { withSessionRoute } from "y/server/wrap";
 import { createSuccessRes } from "y/utils/apiResponse";
 import { withAdmin } from "y/server/wrap";
 import { prisma } from "y/server/db";
