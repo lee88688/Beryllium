@@ -75,23 +75,21 @@ function AdminSetting() {
       <Card sx={{ mt: 2 }}>
         <CardContent>
           <Typography variant="h6" sx={{ mb: 1 }}>
-            Members
+            用户
           </Typography>
           <List
-            subheader={
-              <ListSubheader disableGutters>Add New User</ListSubheader>
-            }
+            subheader={<ListSubheader disableGutters>添加新用户</ListSubheader>}
           >
             <ListItem disableGutters>
               <TextField
-                label="User Name"
+                label="用户名"
                 value={userName}
                 onChange={(e) => setUserName(e.target.value)}
               />
             </ListItem>
             <ListItem disableGutters>
               <TextField
-                label="Password"
+                label="密码"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
               />
@@ -106,7 +104,7 @@ function AdminSetting() {
                   await userListQuery.refetch();
                 }}
               >
-                Add
+                新增
               </LoadingButton>
             </ListItem>
           </List>
@@ -115,8 +113,8 @@ function AdminSetting() {
             <TableHead>
               <TableRow>
                 <TableCell>ID</TableCell>
-                <TableCell>User Name</TableCell>
-                <TableCell>Admin</TableCell>
+                <TableCell>用户名称</TableCell>
+                <TableCell>管理员</TableCell>
                 <TableCell align="right"></TableCell>
               </TableRow>
             </TableHead>
@@ -137,8 +135,8 @@ function AdminSetting() {
                         onClick={async () => {
                           try {
                             await openDialog({
-                              title: "Delete User",
-                              content: `Delete user ${row.username}?`,
+                              title: "删除用户",
+                              content: `是否删除${row.username}?`,
                             });
                           } catch (e) {
                             return;
@@ -193,7 +191,7 @@ export default function Setting(props: SettingProps) {
               <ArrowBack />
             </IconButton>
             <Typography className={classes.appBarTitle} variant="h6" noWrap>
-              Setting
+              设置
             </Typography>
           </Toolbar>
         </AppBar>
@@ -202,18 +200,18 @@ export default function Setting(props: SettingProps) {
           <Card className={classes.card}>
             <CardContent>
               <Typography variant="h6" sx={{ mb: 1 }}>
-                Modify Password
+                修改密码
               </Typography>
               <Box sx={{ mb: 1 }}>
                 <TextField
-                  label="new password"
+                  label="新密码"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                 />
               </Box>
               <div>
                 <TextField
-                  label="input again"
+                  label="再次输入"
                   value={rePassword}
                   onChange={(e) => setRePassword(e.target.value)}
                 />
@@ -231,7 +229,7 @@ export default function Setting(props: SettingProps) {
                   });
                 }}
               >
-                confirm
+                确认
               </LoadingButton>
             </CardActions>
           </Card>

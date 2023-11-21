@@ -195,7 +195,7 @@ export default function Bookshelf(props: BookshelfProps) {
               <MenuIcon />
             </IconButton>
             <Typography className={classes.appBarTitle} variant="h6" noWrap>
-              Bookshelf
+              书架
             </Typography>
             {menuButton}
             <Menu
