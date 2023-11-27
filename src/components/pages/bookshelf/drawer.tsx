@@ -3,7 +3,7 @@ import { drawerWidth } from "../../../pages/bookshelf";
 import { makeStyles } from "y/utils/makesStyles";
 import { useState } from "react";
 import { useRouter } from "next/router";
-import { apiLogout } from "../../../pages/clientApi";
+import { apiLogout } from "../../../clientApi";
 import Divider from "@mui/material/Divider";
 import List from "@mui/material/List";
 import ListItem from "@mui/material/ListItem";

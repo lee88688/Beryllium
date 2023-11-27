@@ -33,7 +33,7 @@ import {
   apiCreateUser,
   apiDeleteUser,
   apiUserList,
-} from "./clientApi";
+} from "../clientApi";
 import { type GetServerSideProps } from "next";
 import { prisma } from "y/server/db";
 import { withSessionSsr } from "y/server/wrap";

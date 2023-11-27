@@ -13,12 +13,12 @@ import {
   apiGetCategory,
   apiRemoveBooksFromCategory,
   uploadBook,
-} from "../clientApi";
+} from "../../clientApi";
 import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
 import MoreVert from "@mui/icons-material/MoreVert";
 import type * as Prisma from "@prisma/client";
-import { apiRemoveCategory } from "../clientApi";
+import { apiRemoveCategory } from "../../clientApi";
 import { type GetServerSideProps } from "next";
 import { prisma } from "y/server/db";
 import { withSessionSsr } from "y/server/wrap";

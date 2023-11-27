@@ -18,7 +18,7 @@ import {
   getFileUrl,
   getMark,
   removeMark,
-} from "../clientApi";
+} from "../../clientApi";
 import {
   ReaderDrawer,
   drawerWidth,
@@ -27,7 +27,7 @@ import {
 import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
 import truncate from "lodash/truncate";
-import { addMark } from "../clientApi";
+import { addMark } from "../../clientApi";
 import type * as Prisma from "@prisma/client";
 import { MarkType } from "y/utils/constants";
 import { type GetServerSidePropsResult, type GetServerSideProps } from "next";
