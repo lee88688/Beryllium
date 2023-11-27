@@ -25,8 +25,8 @@ import { withSessionSsr } from "y/server/wrap";
 import { useSnackbar } from "notistack";
 import { makeStyles } from "y/utils/makesStyles";
 import { useQuery } from "@tanstack/react-query";
-import { BookList } from "./bookList";
-import { BookshelfDrawer } from "./drawer";
+import { BookList } from "y/components/pages/bookshelf/bookList";
+import { BookshelfDrawer } from "y/components/pages/bookshelf/drawer";
 import { useConfirmDialog } from "y/hooks/useConfirmDialog";
 
 export const drawerWidth = 300;

@@ -7,8 +7,8 @@ import {
   HighlightEditor,
   getColorsValue,
 } from "y/components/highlightEditor";
-import { addMark, removeMark, apiUpdateMark } from "../clientApi";
-import { getElementHeading } from "./index";
+import { addMark, removeMark, apiUpdateMark } from "../../../pages/clientApi";
+import { getElementHeading } from "../../../pages/reader/index";
 import type * as Prisma from "@prisma/client";
 import { MarkType } from "y/utils/constants";
 import { EpubReader } from "y/utils/epubReader";

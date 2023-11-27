@@ -12,14 +12,18 @@ import ArrowBack from "@mui/icons-material/ArrowBack";
 import { useTheme } from "@mui/material/styles";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import { makeStyles } from "y/utils/makesStyles";
-import { useReader } from "./epubReader";
+import { useReader } from "y/components/pages/reader/epubReader";
 import {
   apiUpdateBookCurrent,
   getFileUrl,
   getMark,
   removeMark,
 } from "../clientApi";
-import { ReaderDrawer, drawerWidth, viewBreakPoint } from "./readerDrawer";
+import {
+  ReaderDrawer,
+  drawerWidth,
+  viewBreakPoint,
+} from "y/components/pages/reader/readerDrawer";
 import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
 import truncate from "lodash/truncate";

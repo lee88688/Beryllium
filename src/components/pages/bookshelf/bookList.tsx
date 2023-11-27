@@ -9,7 +9,7 @@ import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
 import Paper from "@mui/material/Paper";
 import React, { useMemo, useRef, useState } from "react";
-import { type BookshelfProps } from ".";
+import { type BookshelfProps } from "../../../pages/bookshelf";
 import AddIcon from "@mui/icons-material/Add";
 import Dialog from "@mui/material/Dialog";
 import DialogTitle from "@mui/material/DialogTitle";
@@ -18,7 +18,6 @@ import ListItemButton from "@mui/material/ListItemButton";
 import ListItemText from "@mui/material/ListItemText";
 import { useRouter } from "next/router";
 import { useSnackbar } from "notistack";
-import { apiGetBookCurrent } from "../clientApi";
 
 function getFileUrl(fileName: string, path: string) {
   return `/api/book/file/${fileName}/${path}`;
