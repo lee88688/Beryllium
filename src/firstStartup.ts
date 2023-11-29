@@ -6,7 +6,7 @@ import { createUser } from "y/server/service/user";
 export async function startup() {
   console.log("startup");
   const adminUser = await prisma.user.findFirst({ where: { isAdmin: true } });
-  if (!adminUser) return;
+  if (adminUser) return;
 
   await createUser({
     username: env.ADMIN_USER_NAME,

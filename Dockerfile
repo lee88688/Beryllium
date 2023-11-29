@@ -30,22 +30,18 @@ WORKDIR /app
 ENV NODE_ENV production
 ENV NEXT_TELEMETRY_DISABLED 1
 
-# RUN addgroup --system --gid 1001 nodejs
-# RUN adduser --system --uid 1001 nextjs
-
 COPY --from=builder /app/public ./public
 
-# Set the correct permission for prerender cache
 RUN mkdir .next
-# RUN chown nextjs:nodejs .next
 
-COPY --from=builder --chown=nextjs:nodejs /app/prisma ./prisma
-COPY --from=builder --chown=nextjs:nodejs /app/package.json /app/package-lock.json* ./
-COPY --from=builder --chown=nextjs:nodejs /app/.next/ ./.next/
+COPY --from=builder /app/prisma ./prisma
+COPY --from=builder /app/package.json /app/package-lock.json* ./
+COPY --from=builder /app/.next/ ./.next/
 
 RUN npm install --production --registry=http://registry.npmmirror.com && npm cache clean --force
 
-# USER nextjs
+# without this, instrumentation can't execute
+RUN echo "export default {experimental: {instrumentationHook: true}}" > next.config.mjs
 
 EXPOSE 3000
 
