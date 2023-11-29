@@ -3,7 +3,8 @@ import { prisma } from "y/server/db";
 import { env } from "y/env.mjs";
 import { createUser } from "y/server/service/user";
 
-export default async function startup() {
+export async function startup() {
+  console.log("startup");
   const adminUser = await prisma.user.findFirst({ where: { isAdmin: true } });
   if (!adminUser) return;
 
@@ -12,4 +13,5 @@ export default async function startup() {
     password: env.ADMIN_USER_PASSWORD,
     isAdmin: true,
   });
+  console.log(`create admin user(${env.ADMIN_USER_NAME})`);
 }

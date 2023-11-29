@@ -7,7 +7,8 @@
     "dev": "next dev",
     "postinstall": "prisma generate",
     "lint": "next lint",
-    "start": "next start"
+    "migrate:deploy": "prisma migrate deploy",
+    "start:prod": "prisma migrate deploy && next start"
   },
   "prisma": {
     "seed": "node prisma/seed.mjs"
@@ -33,7 +34,7 @@
     "lodash": "^4.17.21",
     "mime-types": "^2.1.35",
     "mkdirp": "^3.0.1",
-    "next": "^13.5.1",
+    "next": "^13.5.6",
     "prisma": "^5.6.0",
     "react": "18.2.0",
     "react-dom": "18.2.0",
@@ -43,7 +44,12 @@
     "unzipper": "^0.10.14",
     "uuid": "^9.0.1",
     "xml2js": "^0.6.2",
-    "zod": "^3.21.4"
+    "formik": "^2.2.1",
+    "notistack": "^3.0.1",
+    "ahooks": "^3.7.8",
+    "epubjs": "^0.3.88",
+    "zod": "^3.21.4",
+    "zod-formik-adapter": "^1.2.0"
   },
   "devDependencies": {
     "@tanstack/eslint-plugin-query": "^4.36.1",
@@ -59,19 +65,14 @@
     "@types/xml2js": "^0.4.12",
     "@typescript-eslint/eslint-plugin": "^6.3.0",
     "@typescript-eslint/parser": "^6.3.0",
-    "ahooks": "^3.7.8",
     "autoprefixer": "^10.4.14",
-    "epubjs": "^0.3.88",
     "eslint": "^8.47.0",
     "eslint-config-next": "^13.4.13",
-    "formik": "^2.2.1",
-    "notistack": "^3.0.1",
     "postcss": "^8.4.27",
     "prettier": "^3.0.0",
     "prettier-plugin-tailwindcss": "^0.5.1",
     "tailwindcss": "^3.3.3",
-    "typescript": "^5.1.6",
-    "zod-formik-adapter": "^1.2.0"
+    "typescript": "^5.1.6"
   },
   "ct3aMetadata": {
     "initVersion": "7.19.0"
