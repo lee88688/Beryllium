@@ -214,7 +214,7 @@ export function ReaderDrawer(props: ReaderDrawerProps) {
           }}
           onClick={() => setBottomDrawerOpen(!bottomDrawerOpen)}
         >
-          test
+          {""}
         </Box>
         <Box>test3</Box>
       </SwipeableDrawer>

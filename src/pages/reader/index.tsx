@@ -182,7 +182,6 @@ export default function Reader(props: ReaderProps) {
 
     const location = await epubReaderRef.current?.currentLocation();
     const cfi = location.start.cfi;
-    console.log("current cfi", location);
     await apiUpdateBookCurrent(id, cfi);
   };
 
