@@ -156,7 +156,6 @@ const useGridStyles = makeStyles()((theme) => ({
     display: "flex",
     justifyContent: "center",
     alignItems: "center",
-    color: "rgba(0, 0, 0, 0.2)",
     cursor: "pointer",
   },
   addInput: {
@@ -201,7 +200,7 @@ export function BookList(props: BookListProps) {
     };
   };
 
-  const bookMenuSelected = async (type: BookMenuType, id: number) => {
+  const bookMenuSelected = (type: BookMenuType, id: number) => {
     if (
       type === BookMenuType.ADD_CATEGORY &&
       Array.isArray(categoriesExcludeCurrent) &&
@@ -232,10 +231,9 @@ export function BookList(props: BookListProps) {
     }
   };
 
-  const inputChange = async () => {
+  const inputChange = () => {
     if (!addInputRef.current) return;
     const inputElement = addInputRef.current;
-    enqueueSnackbar("start upload");
     const [file] = inputElement.files ?? [];
     if (!file) return;
     props.onSelectFile(file);
@@ -268,7 +266,7 @@ export function BookList(props: BookListProps) {
         }}
         elevation={2}
       >
-        <AddIcon fontSize="large" />
+        <AddIcon fontSize="large" sx={{ opacity: 0.5 }} />
         <input
           ref={addInputRef}
           onChange={inputChange}

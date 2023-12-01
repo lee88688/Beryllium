@@ -22,7 +22,7 @@ import { apiRemoveCategory } from "../../clientApi";
 import { type GetServerSideProps } from "next";
 import { prisma } from "y/server/db";
 import { withSessionSsr } from "y/server/wrap";
-import { useSnackbar } from "notistack";
+import { closeSnackbar, useSnackbar } from "notistack";
 import { makeStyles } from "y/utils/makesStyles";
 import { useQuery } from "@tanstack/react-query";
 import { BookList } from "y/components/pages/bookshelf/bookList";
@@ -120,8 +120,12 @@ export default function Bookshelf(props: BookshelfProps) {
   };
 
   const handleSelectFile = async (file: File) => {
+    const snackbarId = enqueueSnackbar("upload file, please wait.", {
+      variant: "success",
+      persist: true,
+    });
     await uploadBook(file);
-    enqueueSnackbar("successful upload", { variant: "success" });
+    closeSnackbar(snackbarId);
     await bookQuery.refetch();
   };
 
@@ -165,7 +169,6 @@ export default function Bookshelf(props: BookshelfProps) {
 
   const handleCreateCategory = async (name: string) => {
     await apiCreateCategory({ name });
-    enqueueSnackbar("successful created", { variant: "success" });
     await categoryQuery.refetch();
   };
 

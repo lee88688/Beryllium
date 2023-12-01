@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { SnackbarProvider } from "notistack";
 import createCache from "@emotion/cache";
 import { CacheProvider } from "@emotion/react";
+import { ThemeProvider, createTheme } from "@mui/material/styles";
 
 import "y/styles/globals.css";
 import "@fontsource/roboto/300.css";
@@ -19,6 +20,13 @@ const queryClient = new QueryClient({
     },
   },
 });
+
+const darkTheme = createTheme({
+  palette: {
+    mode: "dark",
+  },
+});
+
 // https://mui.com/material-ui/guides/server-rendering/
 const emotionCache = createCache({ key: "css" });
 
@@ -27,11 +35,13 @@ const App: AppType = ({ Component, pageProps }) => {
     <QueryClientProvider client={queryClient}>
       <SnackbarProvider>
         <CacheProvider value={emotionCache}>
-          <CssBaseline />
-          {process.env.NODE_ENV === "development" && (
-            <ReactQueryDevtools initialIsOpen={false} />
-          )}
-          <Component {...pageProps} />
+          <ThemeProvider theme={darkTheme}>
+            <CssBaseline />
+            {process.env.NODE_ENV === "development" && (
+              <ReactQueryDevtools initialIsOpen={false} />
+            )}
+            <Component {...pageProps} />
+          </ThemeProvider>
         </CacheProvider>
       </SnackbarProvider>
     </QueryClientProvider>
