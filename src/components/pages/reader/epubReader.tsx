@@ -13,6 +13,7 @@ import type * as Prisma from "@prisma/client";
 import { MarkType } from "y/utils/constants";
 import { EpubReader } from "y/utils/epubReader";
 import { useMutation } from "@tanstack/react-query";
+import { useTheme } from "@mui/material/styles";
 
 // window.EpubCFI = EpubCFI;
 
@@ -59,6 +60,8 @@ export function useReader({
 
   // point curEditorValueRef to curEditorValue
   curEditorValueRef.current = curEditorValue;
+
+  const theme = useTheme();
 
   const addMarkMutation = useMutation({
     mutationFn: (val: EditorValue) => addMark(val),
@@ -144,6 +147,12 @@ export function useReader({
     const epubReader = new EpubReader(opfUrl, "viewer");
     epubReaderRef.current = epubReader;
     window.epubReader = epubReaderRef.current;
+    epubReader.registerTheme("light", {});
+    epubReader.registerTheme("dark", {
+      body: {
+        color: "white",
+      },
+    });
     // when book has no current, it is empty string
     void epubReaderRef.current.display(startCfi || 0);
     epubReaderRef.current.on("selected", handleSelected);
@@ -160,6 +169,11 @@ export function useReader({
     // todo: temporarily omit this, and add highlightList check later
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const themeMode = theme.palette.mode;
+  useEffect(() => {
+    epubReaderRef.current?.useTheme(themeMode);
+  }, [themeMode]);
 
   const addMarkMutate = addMarkMutation.mutateAsync;
   const handleEditorChange = useCallback(

@@ -77,6 +77,14 @@ export class EpubReader extends EventEmitter<
     );
   }
 
+  registerTheme(name: string, value: Record<string, unknown>) {
+    this.rendition.themes.register(name, value);
+  }
+
+  useTheme(name: string) {
+    this.rendition.themes.select(name);
+  }
+
   display(target: string | number) {
     return this.rendition.display(target as string);
   }

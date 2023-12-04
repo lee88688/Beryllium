@@ -12,6 +12,9 @@ import "@fontsource/roboto/500.css";
 import "@fontsource/roboto/700.css";
 import CssBaseline from "@mui/material/CssBaseline";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
+import { useMemo } from "react";
+import { usePreferredThemeMode } from "y/hooks/usePreferredThemeMode";
+import NoSsr from "@mui/material/NoSsr";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -21,26 +24,34 @@ const queryClient = new QueryClient({
   },
 });
 
-const darkTheme = createTheme({
-  palette: {
-    mode: "dark",
-  },
-});
-
 // https://mui.com/material-ui/guides/server-rendering/
 const emotionCache = createCache({ key: "css" });
 
 const App: AppType = ({ Component, pageProps }) => {
+  const themeMode = usePreferredThemeMode();
+
+  const theme = useMemo(
+    () =>
+      createTheme({
+        palette: {
+          mode: themeMode,
+        },
+      }),
+    [themeMode],
+  );
+
   return (
     <QueryClientProvider client={queryClient}>
       <SnackbarProvider>
         <CacheProvider value={emotionCache}>
-          <ThemeProvider theme={darkTheme}>
+          <ThemeProvider theme={theme}>
             <CssBaseline />
             {process.env.NODE_ENV === "development" && (
               <ReactQueryDevtools initialIsOpen={false} />
             )}
-            <Component {...pageProps} />
+            <NoSsr>
+              <Component {...pageProps} />
+            </NoSsr>
           </ThemeProvider>
         </CacheProvider>
       </SnackbarProvider>

@@ -28,6 +28,7 @@ import { useQuery } from "@tanstack/react-query";
 import { BookList } from "y/components/pages/bookshelf/bookList";
 import { BookshelfDrawer } from "y/components/pages/bookshelf/drawer";
 import { useConfirmDialog } from "y/hooks/useConfirmDialog";
+import { ThemeModeIconButton } from "y/components/themeModeIconButton";
 
 export const drawerWidth = 300;
 
@@ -200,6 +201,7 @@ export default function Bookshelf(props: BookshelfProps) {
             <Typography className={classes.appBarTitle} variant="h6" noWrap>
               书架
             </Typography>
+            <ThemeModeIconButton edge="end" />
             {menuButton}
             <Menu
               open={Boolean(menuAnchor)}
