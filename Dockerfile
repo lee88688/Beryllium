@@ -34,11 +34,12 @@ COPY --from=builder /app/public ./public
 
 RUN mkdir .next
 
+COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/package.json /app/package-lock.json* ./
-COPY --from=builder /app/.next/ ./.next/
+COPY --from=builder /app/.next/static ./.next/static
 
-RUN npm install --production --registry=http://registry.npmmirror.com && npm cache clean --force
+# RUN npm install --production --registry=http://registry.npmmirror.com && npm cache clean --force
 
 # without this, instrumentation can't execute
 RUN echo "export default {experimental: {instrumentationHook: true}}" > next.config.mjs
@@ -50,7 +51,7 @@ ENV PORT 3000
 ENV HOSTNAME "0.0.0.0"
 ENV DATABASE_URL "file:/app/data/db.sqlite"
 ENV ASAR_DIR "./data/asar"
-ENV TEMP_DIR "./data/temp"
+ENV TEMP_DIR "./temp"
 ENV ADMIN_USER_NAME "admin"
 ENV ADMIN_USER_PASSWORD ""
 

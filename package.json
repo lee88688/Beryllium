@@ -8,7 +8,7 @@
     "postinstall": "prisma generate",
     "lint": "next lint",
     "migrate:deploy": "prisma migrate deploy",
-    "start:prod": "prisma migrate deploy && next start"
+    "start:prod": "npx --yes prisma migrate deploy && node server.js"
   },
   "prisma": {
     "seed": "node prisma/seed.mjs"

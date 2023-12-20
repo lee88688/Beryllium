@@ -9,7 +9,7 @@ const config = {
   // void reader effect triggered twice
   reactStrictMode: false,
 
-  // output: 'standalone',
+  output: 'standalone',
 
   typescript: {
     ignoreBuildErrors: true
