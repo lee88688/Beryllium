@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useRef, useEffect } from "react";
 import { useRouter } from "next/router";
 import Typography from "@mui/material/Typography";
 import AppBar from "@mui/material/AppBar";
@@ -99,6 +99,7 @@ type ReaderProps = {
 
 export default function Reader(props: ReaderProps) {
   const [currentTocItem, setCurrentTocItem] = useState("");
+  const currentCfiRef = useRef("");
 
   const { classes, cx } = useStyles();
   const router = useRouter();
@@ -176,13 +177,24 @@ export default function Reader(props: ReaderProps) {
     await bookmarkListQuery.refetch();
   };
 
+  const reportCurrentLocation = useCallback(async () => {
+    const location = await epubReaderRef.current?.currentLocation();
+    const cfi = location?.start?.cfi;
+    if (!cfi || currentCfiRef.current === cfi) return;
+    currentCfiRef.current = cfi;
+    await apiUpdateBookCurrent(id, cfi);
+  }, [epubReaderRef, id]);
+
+  useEffect(() => {
+    const id = setInterval(reportCurrentLocation, 1000);
+    return () => clearInterval(id);
+  }, [reportCurrentLocation]);
+
   const goBack = async () => {
     void router.push("/bookshelf");
     if (!epubReaderRef.current) return;
 
-    const location = await epubReaderRef.current?.currentLocation();
-    const cfi = location.start.cfi;
-    await apiUpdateBookCurrent(id, cfi);
+    return reportCurrentLocation();
   };
 
   const handleTocClick = useCallback<NestedListItemClick>(
