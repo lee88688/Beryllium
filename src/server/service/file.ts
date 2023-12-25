@@ -9,7 +9,6 @@ import asar from "@electron/asar";
 import { v1 as uuidv1 } from "uuid";
 import { rimraf } from "rimraf";
 import { EasyAsar, fsGetter } from "asar-async";
-import { index as asarIndexSymbol } from "asar-async/dist/base";
 import xml2js from "xml2js";
 import { fillInBaseInfo, prisma } from "../db";
 import type * as Prisma from "@prisma/client";

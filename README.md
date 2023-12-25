@@ -1,6 +1,9 @@
-# Create T3 App
+# Beryllium
 
-how to development
+build epub reader for self hosted
+
+## how to development
+
 - create `.env` file, like `.env.example`
 - prisma
   - `npx prisma db push`, push schema to db
