@@ -149,7 +149,7 @@ export function HighlightEditor<T extends Record<string, unknown>>(
         fullWidth
         multiline
         classes={{ root: classes.input }}
-        placeholder="comment"
+        placeholder="评论"
         disabled={!props.id}
       />
       <Divider />
@@ -166,7 +166,7 @@ export function HighlightEditor<T extends Record<string, unknown>>(
               } as HighlightEditorValue<T>);
           }}
         >
-          confirm
+          确定
         </Button>
         <Button
           key="delete"
@@ -180,7 +180,7 @@ export function HighlightEditor<T extends Record<string, unknown>>(
               } as HighlightEditorValue<T>);
           }}
         >
-          delete
+          删除
         </Button>
         <Button
           key="cancel"
@@ -188,7 +188,7 @@ export function HighlightEditor<T extends Record<string, unknown>>(
             isFunction(onCancel) && onCancel({ ...props, color, content });
           }}
         >
-          cancel
+          取消
         </Button>
       </div>
     </Paper>

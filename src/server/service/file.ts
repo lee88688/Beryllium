@@ -3,9 +3,9 @@ import * as fs from "node:fs";
 import * as fsPromises from "node:fs/promises";
 import unzipper from "unzipper";
 import { mkdirp } from "mkdirp";
-import { asarDir, tempDir } from "y/config";
+import { asarDir, tempDir, lruOptions } from "y/config";
 import { type Readable } from "node:stream";
-import asar from "asar";
+import asar from "@electron/asar";
 import { v1 as uuidv1 } from "uuid";
 import { rimraf } from "rimraf";
 import { EasyAsar, fsGetter } from "asar-async";
@@ -13,6 +13,9 @@ import { index as asarIndexSymbol } from "asar-async/dist/base";
 import xml2js from "xml2js";
 import { fillInBaseInfo, prisma } from "../db";
 import type * as Prisma from "@prisma/client";
+import { LRUCache } from "lru-cache";
+
+const lruCache = new LRUCache(lruOptions);
 
 export function asarFileDir(name: string) {
   return path.join(asarDir, `${name}.asar`);
@@ -63,17 +66,20 @@ export async function convertEpubToAsar(
 }
 
 export async function readAsarFile(asarFile: string, filePath: string) {
-  const ar = new EasyAsar(fsGetter(asarFile));
-  await ar.fetchIndex();
+  const cacheAr = lruCache.get(asarFile);
+  const ar = cacheAr ?? new EasyAsar(fsGetter(asarFile));
+  if (!cacheAr) {
+    lruCache.set(asarFile, ar);
+  }
   const buffer = await ar.readFile(filePath);
   return buffer;
 }
 
-export async function readAsarIndex(asarFile: string) {
-  const ar = new EasyAsar(fsGetter(asarFile));
-  await ar.fetchIndex();
-  return ar[asarIndexSymbol];
-}
+// export async function readAsarIndex(asarFile: string) {
+//   const ar = new EasyAsar(fsGetter(asarFile));
+//   await ar.fetchIndex();
+//   return ar[asarIndexSymbol];
+// }
 
 export async function saveEpubFile(userId: number, fileStream: Readable) {
   const bookFileName = uuidv1();
