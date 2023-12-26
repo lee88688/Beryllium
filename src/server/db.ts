@@ -76,7 +76,6 @@ function getManifestItemFromId(
 function getManifestItemHrefUrl(book: Book, href: string) {
   if (!book.contentPath) return "";
   const dir = path.dirname(book.contentPath);
-  console.log("dir", dir);
   // fixme: asar-async has a bug when path is windows like, eg: OEBPS\toc.ncx
   // when content path is file(eg. content.opf) the dirname is `.`,
   // so use simple template `${dir}/${href}` will cause error
