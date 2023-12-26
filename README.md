@@ -2,6 +2,35 @@
 
 build epub reader for self hosted
 
+## how to use
+
+if you want to build from source, see `how to develop` below.
+
+generally, you should use [docker image](https://hub.docker.com/r/lee88688/beryllium) directly. here is the example of docker compose config.
+
+```yaml
+version: "3"
+services:
+  beryllium:
+    image: lee88688/beryllium
+    ports:
+      - 3000:3000
+    environment:
+      # this env should be add
+      - ADMIN_USER_PASSWORD="some password"
+      # the default admin user name is admin,
+      # if you want to rename, please uncomment this line
+      # - ADMIN_USER_NAME="admin"
+    volumes:
+      - /path/to/data:/app/data
+```
+
+`/app/data/db.sqlite` stores the database, and `/app/data/asar` stores the upload epub files.
+
+### NOTE
+
+the epub file uploaded from the user will be transformed into the asar file format. the asar file is just like tar file which combine the extracted files inside epub into one. so you should keep you epub files if you want to reuse them later. and there is a way to convert asar file to epub.
+
 ## how to development
 
 - create `.env` file, like `.env.example`
