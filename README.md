@@ -16,8 +16,8 @@ services:
     ports:
       - 3000:3000
     environment:
-      # this env should be add
-      - ADMIN_USER_PASSWORD="some password"
+      # this env should be add, do not add quote to password string
+      - ADMIN_USER_PASSWORD=some-password
       # the default admin user name is admin,
       # if you want to rename, please uncomment this line
       # - ADMIN_USER_NAME="admin"
