@@ -41,5 +41,6 @@ export function post<T>(url: string, body?: unknown) {
       enqueueSnackbar(res.message, { variant: "error" });
       throw new Error(res.message);
     }
+    return res;
   });
 }

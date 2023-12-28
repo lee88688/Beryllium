@@ -64,7 +64,7 @@ export class EpubReader extends EventEmitter<
       width: "100%",
       height: "100%",
       snap: true,
-      stylesheet: "/style.css",
+      // stylesheet: "/style.css",
       // allowScriptedContent: true,
       // FIXME: need to add
       // script: `${process.env.PUBLIC_URL}/epubjs-ext/rendition-injection.js`,
