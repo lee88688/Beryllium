@@ -72,7 +72,7 @@ function BookmarkListItem(props: BookmarkListItemProps) {
               onClose={menuClose}
               keepMounted
             >
-              <MenuItem onClick={removeBookmark}>remove bookmark</MenuItem>
+              <MenuItem onClick={removeBookmark}>删除</MenuItem>
             </Menu>
           </IconButton>
         </Box>
