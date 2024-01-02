@@ -67,10 +67,10 @@ function HighlightListItem(props: HighlightListItemProps) {
     e.stopPropagation();
 
   const comment = !content ? null : (
-    <>
-      <Typography variant="caption">comment</Typography>
+    <Box sx={{ mt: 1 }}>
+      <Typography variant="caption">批注</Typography>
       <Typography variant="body1">{content}</Typography>
-    </>
+    </Box>
   );
 
   return (
@@ -100,12 +100,12 @@ function HighlightListItem(props: HighlightListItemProps) {
               onClose={menuClose}
               keepMounted
             >
-              <MenuItem onClick={removeBookmark}>remove bookmark</MenuItem>
+              <MenuItem onClick={removeBookmark}>删除</MenuItem>
             </Menu>
           </IconButton>
         </Box>
         <Typography variant="body1">{selectedString}</Typography>
-        <br />
+        {/* <br /> */}
         {comment}
       </Box>
       <Divider />

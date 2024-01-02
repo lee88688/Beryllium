@@ -156,6 +156,10 @@ export default function Reader(props: ReaderProps) {
 
   const [drawerOpen, setDrawerOpen] = useState(false);
 
+  useEffect(() => {
+    void router.prefetch("/bookshelf");
+  }, [router]);
+
   const addBookmark = async () => {
     if (!epubReaderRef.current) return;
 

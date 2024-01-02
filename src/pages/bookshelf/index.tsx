@@ -1,4 +1,5 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
+import { useRouter } from "next/router";
 import AppBar from "@mui/material/AppBar";
 import Toolbar from "@mui/material/Toolbar";
 import IconButton from "@mui/material/IconButton";
@@ -72,6 +73,12 @@ export default function Bookshelf(props: BookshelfProps) {
   const { enqueueSnackbar } = useSnackbar();
 
   const { classes } = useStyles();
+
+  const router = useRouter();
+
+  useEffect(() => {
+    void router.prefetch("/reader");
+  }, [router]);
 
   const categoryQuery = useQuery({
     queryKey: ["getCategory"] as const,

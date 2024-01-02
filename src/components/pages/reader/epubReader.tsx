@@ -1,12 +1,8 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
-import ePub, { type Rendition, type Contents, type Location } from "epubjs";
-import { EpubCFI } from "epubjs";
+import { useLatest } from "ahooks";
+import { type Contents, type Location } from "epubjs";
 import Popper, { type PopperProps } from "@mui/material/Popper";
-import {
-  Colors,
-  HighlightEditor,
-  getColorsValue,
-} from "y/components/highlightEditor";
+import { HighlightEditor } from "y/components/highlightEditor";
 import { addMark, removeMark, apiUpdateMark } from "../../../clientApi";
 import { getElementHeading } from "../../../pages/reader/index";
 import type * as Prisma from "@prisma/client";
@@ -61,6 +57,8 @@ export function useReader({
   // point curEditorValueRef to curEditorValue
   curEditorValueRef.current = curEditorValue;
 
+  const highlightListRef = useLatest(highlightList);
+
   const theme = useTheme();
 
   const addMarkMutation = useMutation({
@@ -114,8 +112,13 @@ export function useReader({
       );
 
       setCurEditorValue((val) => {
+        let v = val;
+        // when val has a id, it means user clicks a existing mark without closing and selects strings.
+        if (val.id) {
+          v = EMPTY_EDITOR_VALUE(val.bookId);
+        }
         return {
-          ...val,
+          ...v,
           epubcfi,
           selectedString: range.toString(),
           type: MarkType.Highlight,
@@ -130,10 +133,12 @@ export function useReader({
   const handleMarkClick = useCallback(
     (epubcfi: string, data: EditorValue, g: SVGGElement) => {
       anchorEl.current = g;
-      setCurEditorValue(data);
+      const d =
+        highlightListRef.current.find((item) => item.id === data.id) ?? data;
+      setCurEditorValue(d);
       setOpenPopover(true);
     },
-    [],
+    [highlightListRef],
   );
 
   const handleRelocated = useCallback(
@@ -146,7 +151,8 @@ export function useReader({
   useEffect(() => {
     const epubReader = new EpubReader(opfUrl, "viewer");
     epubReaderRef.current = epubReader;
-    window.epubReader = epubReaderRef.current;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
+    (window as any).epubReader = epubReaderRef.current;
     epubReader.registerTheme("light", {});
     epubReader.registerTheme("dark", {
       body: {
@@ -187,16 +193,19 @@ export function useReader({
 
             return value;
           });
+          onHighlightRefetch();
         });
       }
       setCurEditorValue(value);
     },
-    [addMarkMutate],
+    [addMarkMutate, onHighlightRefetch],
   );
 
   const handleEditorCancel = useCallback(() => {
+    // todo: does `updateHighlightElement` really need?
     // canceling will remove changes
     updateHighlightElement(preEditorValue.current);
+    setCurEditorValue(EMPTY_EDITOR_VALUE(preEditorValue.current.bookId));
     setOpenPopover(false);
   }, [updateHighlightElement]);
 
@@ -206,7 +215,7 @@ export function useReader({
       const val = { ...curEditorValue, ...value };
       if (!val.id) return;
 
-      await updateMarkMutate(val);
+      await updateMarkMutate(val as EditorValue & { id: number });
       updateHighlightElement(value);
       setOpenPopover(false);
       onHighlightRefetch();
