@@ -112,8 +112,13 @@ export function useReader({
       );
 
       setCurEditorValue((val) => {
+        let v = val;
+        // when val has a id, it means user clicks a existing mark without closing and selects strings.
+        if (val.id) {
+          v = EMPTY_EDITOR_VALUE(val.bookId);
+        }
         return {
-          ...val,
+          ...v,
           epubcfi,
           selectedString: range.toString(),
           type: MarkType.Highlight,
@@ -187,6 +192,7 @@ export function useReader({
 
             return value;
           });
+          onHighlightRefetch();
         });
       }
       setCurEditorValue(value);
