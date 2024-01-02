@@ -1,12 +1,8 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
-import ePub, { type Rendition, type Contents, type Location } from "epubjs";
-import { EpubCFI } from "epubjs";
+import { useLatest } from "ahooks";
+import { type Contents, type Location } from "epubjs";
 import Popper, { type PopperProps } from "@mui/material/Popper";
-import {
-  Colors,
-  HighlightEditor,
-  getColorsValue,
-} from "y/components/highlightEditor";
+import { HighlightEditor } from "y/components/highlightEditor";
 import { addMark, removeMark, apiUpdateMark } from "../../../clientApi";
 import { getElementHeading } from "../../../pages/reader/index";
 import type * as Prisma from "@prisma/client";
@@ -60,6 +56,8 @@ export function useReader({
 
   // point curEditorValueRef to curEditorValue
   curEditorValueRef.current = curEditorValue;
+
+  const highlightListRef = useLatest(highlightList);
 
   const theme = useTheme();
 
@@ -130,10 +128,12 @@ export function useReader({
   const handleMarkClick = useCallback(
     (epubcfi: string, data: EditorValue, g: SVGGElement) => {
       anchorEl.current = g;
-      setCurEditorValue(data);
+      const d =
+        highlightListRef.current.find((item) => item.id === data.id) ?? data;
+      setCurEditorValue(d);
       setOpenPopover(true);
     },
-    [],
+    [highlightListRef],
   );
 
   const handleRelocated = useCallback(
@@ -195,8 +195,10 @@ export function useReader({
   );
 
   const handleEditorCancel = useCallback(() => {
+    // todo: does `updateHighlightElement` really need?
     // canceling will remove changes
     updateHighlightElement(preEditorValue.current);
+    setCurEditorValue(EMPTY_EDITOR_VALUE(preEditorValue.current.bookId));
     setOpenPopover(false);
   }, [updateHighlightElement]);
 

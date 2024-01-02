@@ -9,15 +9,17 @@ const config = {
   // void reader effect triggered twice
   reactStrictMode: false,
 
-  output: 'standalone',
+  output: "standalone",
+
+  transpilePackages: ["ahooks"],
 
   typescript: {
-    ignoreBuildErrors: true
+    ignoreBuildErrors: true,
   },
 
   experimental: {
-    instrumentationHook: true
-  }
-}
+    instrumentationHook: true,
+  },
+};
 
 export default config;
