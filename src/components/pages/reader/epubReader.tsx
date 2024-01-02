@@ -151,7 +151,8 @@ export function useReader({
   useEffect(() => {
     const epubReader = new EpubReader(opfUrl, "viewer");
     epubReaderRef.current = epubReader;
-    window.epubReader = epubReaderRef.current;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
+    (window as any).epubReader = epubReaderRef.current;
     epubReader.registerTheme("light", {});
     epubReader.registerTheme("dark", {
       body: {
@@ -197,7 +198,7 @@ export function useReader({
       }
       setCurEditorValue(value);
     },
-    [addMarkMutate],
+    [addMarkMutate, onHighlightRefetch],
   );
 
   const handleEditorCancel = useCallback(() => {
@@ -214,7 +215,7 @@ export function useReader({
       const val = { ...curEditorValue, ...value };
       if (!val.id) return;
 
-      await updateMarkMutate(val);
+      await updateMarkMutate(val as EditorValue & { id: number });
       updateHighlightElement(value);
       setOpenPopover(false);
       onHighlightRefetch();
