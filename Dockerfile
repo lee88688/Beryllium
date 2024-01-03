@@ -42,7 +42,8 @@ COPY --from=builder /app/.next/static ./.next/static
 # RUN npm install --production --registry=http://registry.npmmirror.com && npm cache clean --force
 
 # without this, instrumentation can't execute
-RUN echo "export default {experimental: {instrumentationHook: true}}" > next.config.mjs
+# standalone mode does not need this
+# RUN echo "export default {experimental: {instrumentationHook: true}}" > next.config.mjs
 
 EXPOSE 3000
 
