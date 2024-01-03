@@ -17,7 +17,7 @@ import { type DisplayedLocation } from "epubjs/types/rendition";
 declare module "epubjs/types/rendition" {}
 
 export class EpubReader extends EventEmitter<
-  "selected" | "markClicked" | "relocated"
+  "selected" | "markClicked" | "relocated" | "displayed"
 > {
   book: Book;
   rendition: Rendition;
@@ -75,6 +75,7 @@ export class EpubReader extends EventEmitter<
     this.rendition.on("relocated", (location: Location) =>
       this.emit("relocated", location),
     );
+    this.rendition.on("displayed", () => this.emit("displayed"));
   }
 
   registerTheme(name: string, value: Record<string, unknown>) {

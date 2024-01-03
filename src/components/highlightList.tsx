@@ -5,7 +5,7 @@ import List from "@mui/material/List";
 import Divider from "@mui/material/Divider";
 import Box from "@mui/material/Box";
 import { makeStyles } from "../utils/makesStyles";
-import { Colors, getColorsValue } from "./highlightEditor";
+import { type Colors, getColorsValue } from "./highlightEditor";
 import IconButton from "@mui/material/IconButton";
 import MoreVert from "@mui/icons-material/MoreVert";
 import Menu from "@mui/material/Menu";

@@ -169,8 +169,10 @@ export function useReader({
   }, [handleMarkClick, handleRelocated, handleSelected, opfUrl, startCfi]);
 
   useEffect(() => {
-    highlightList.forEach((item) => {
-      epubReaderRef.current?.addHighlight(item);
+    epubReaderRef.current?.once("displayed", () => {
+      highlightList.forEach((item) => {
+        epubReaderRef.current?.addHighlight(item);
+      });
     });
     // todo: temporarily omit this, and add highlightList check later
     // eslint-disable-next-line react-hooks/exhaustive-deps
