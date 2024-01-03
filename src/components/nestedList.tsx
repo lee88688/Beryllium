@@ -14,6 +14,7 @@ import ListItemSecondaryAction from "@mui/material/ListItemSecondaryAction";
 import IconButton from "@mui/material/IconButton";
 import ExpandLess from "@mui/icons-material/ExpandLess";
 import ExpandMore from "@mui/icons-material/ExpandMore";
+import { useMemoizedFn } from "ahooks";
 
 const NestedListContext = React.createContext({
   selected: "",
@@ -166,13 +167,10 @@ export function NestedList(props: NestedListProps) {
     previousPropSelectedRef.current = props.selected;
   }
 
-  const onSelected = useCallback<NestedListItemClick>(
-    (item) => {
-      setSelected(item.src);
-      onClick(item);
-    },
-    [onClick],
-  );
+  const onSelected = useMemoizedFn<NestedListItemClick>((item) => {
+    setSelected(item.src);
+    onClick(item);
+  });
 
   return (
     <NestedListContext.Provider value={{ selected, onSelected }}>

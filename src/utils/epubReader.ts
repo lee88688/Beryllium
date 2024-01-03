@@ -115,6 +115,13 @@ export class EpubReader extends EventEmitter<
     this.rendition.annotations.remove(epubcfi, EpubAnnotationType.Highlight);
   }
 
+  removeHighlightById(id: string | number) {
+    const g: SVGGElement | null = document.querySelector(`g[data-id="${id}"]`);
+    const epubcfi = g?.dataset.epubcfi;
+    if (!epubcfi) return;
+    this.rendition.annotations.remove(epubcfi, EpubAnnotationType.Highlight);
+  }
+
   updateHighlight(mark: Pick<Prisma.Mark, "epubcfi" | "color">) {
     const annotations = (this.rendition.annotations as any)
       ._annotations as Record<string, Annotation>;

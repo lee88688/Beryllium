@@ -11,6 +11,7 @@ import MoreVert from "@mui/icons-material/MoreVert";
 import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
 import type * as Prisma from "@prisma/client";
+import { useMemoizedFn } from "ahooks";
 
 const useStyles = makeStyles()((theme) => ({
   title: {
@@ -105,7 +106,6 @@ function HighlightListItem(props: HighlightListItemProps) {
           </IconButton>
         </Box>
         <Typography variant="body1">{selectedString}</Typography>
-        {/* <br /> */}
         {comment}
       </Box>
       <Divider />
@@ -121,7 +121,10 @@ type HighlightListProps = {
 };
 
 export function HighlightList(props: HighlightListProps) {
-  const { onClick, onRemoveMark, highlightList } = props;
+  const { highlightList } = props;
+
+  const onRemoveMark = useMemoizedFn(props.onRemoveMark);
+  const onClick = useMemoizedFn(props.onClick);
 
   const list = useMemo(
     () => (
@@ -136,8 +139,7 @@ export function HighlightList(props: HighlightListProps) {
         ))}
       </List>
     ),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [highlightList],
+    [highlightList, onClick, onRemoveMark],
   );
 
   return list;

@@ -217,13 +217,14 @@ export default function Reader(props: ReaderProps) {
     [epubReaderRef],
   );
 
-  const handleRemoveMark = useCallback(
-    async (mark: Prisma.Mark) => {
-      await removeMarkMutation.mutateAsync(mark.id);
-      await bookmarkListQuery.refetch();
-    },
-    [bookmarkListQuery, removeMarkMutation],
-  );
+  const handleRemoveMark = async (mark: Prisma.Mark) => {
+    await removeMarkMutation.mutateAsync(mark.id);
+    await Promise.all([
+      bookmarkListQuery.refetch(),
+      highlightListQuery.refetch(),
+    ]);
+    epubReaderRef.current?.removeHighlightById(mark.id);
+  };
 
   return (
     <div className={classes.root}>
