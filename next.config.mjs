@@ -20,6 +20,17 @@ const config = {
   experimental: {
     instrumentationHook: true,
   },
+
+  // eslint-disable-next-line @typescript-eslint/require-await
+  async redirects() {
+    return [
+      {
+        source: "/",
+        destination: "/bookshelf",
+        permanent: true,
+      },
+    ];
+  },
 };
 
 export default config;
