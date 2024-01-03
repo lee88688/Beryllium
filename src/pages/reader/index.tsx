@@ -40,6 +40,7 @@ import {
   type NestedListItemClick,
 } from "y/components/nestedList";
 import { useMutation, useQuery } from "@tanstack/react-query";
+import useScreenWakeLock from "y/hooks/useScreenWakeLock";
 
 const useStyles = makeStyles()((theme) => ({
   root: { display: "flex", flexDirection: "row-reverse" },
@@ -155,6 +156,8 @@ export default function Reader(props: ReaderProps) {
   const menuClose = () => setMenuAnchorEl(null);
 
   const [drawerOpen, setDrawerOpen] = useState(false);
+
+  useScreenWakeLock();
 
   useEffect(() => {
     void router.prefetch("/bookshelf");
