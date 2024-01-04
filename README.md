@@ -2,6 +2,14 @@
 
 build epub reader for self hosted
 
+## features
+
+- easy to deploy, and you own all of your data
+- desktop and mobile support
+- dark mode
+- bookmark and highlight support
+- multi-user support
+
 ## how to use
 
 if you want to build from source, see `how to develop` below.
