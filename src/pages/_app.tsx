@@ -4,7 +4,7 @@ import { SnackbarProvider } from "notistack";
 import createCache from "@emotion/cache";
 import { CacheProvider } from "@emotion/react";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
-
+import Script from "next/script";
 import "y/styles/globals.css";
 import "@fontsource/roboto/300.css";
 import "@fontsource/roboto/400.css";
@@ -55,6 +55,14 @@ const App: AppType = ({ Component, pageProps }) => {
           </ThemeProvider>
         </CacheProvider>
       </SnackbarProvider>
+      {process.env.NODE_ENV === "development" && (
+        <Script
+          src="//cdn.jsdelivr.net/npm/eruda"
+          onLoad={() => {
+            window.eruda.init();
+          }}
+        />
+      )}
     </QueryClientProvider>
   );
 };
