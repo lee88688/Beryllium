@@ -13,7 +13,11 @@ import { useTheme } from "@mui/material/styles";
 
 // window.EpubCFI = EpubCFI;
 
-type VirtualElement = Exclude<PopperProps["anchorEl"], null | undefined>;
+type ExcludeFunction<T> = T extends (...args: unknown[]) => unknown ? never : T;
+
+type VirtualElement = ExcludeFunction<
+  Exclude<PopperProps["anchorEl"], null | undefined | HTMLElement>
+>;
 
 type UseReaderProps = {
   opfUrl: string;
@@ -103,7 +107,7 @@ export function useReader({
       );
 
       anchorEl.current = {
-        nodeType: 1,
+        // nodeType: 1,
         getBoundingClientRect: () => rect,
       };
 
@@ -132,7 +136,20 @@ export function useReader({
 
   const handleMarkClick = useCallback(
     (epubcfi: string, data: EditorValue, g: SVGGElement) => {
-      anchorEl.current = g;
+      let preRect: DOMRect = g.getBoundingClientRect();
+      anchorEl.current = {
+        getBoundingClientRect: () => {
+          // when editor input click and virtual keyboard show
+          // svg may dispear
+          const rect = g.getBoundingClientRect();
+          if (rect.width !== 0) {
+            preRect = rect;
+            return rect;
+          }
+          return preRect;
+        },
+      };
+      // anchorEl.current = g;
       const d =
         highlightListRef.current.find((item) => item.id === data.id) ?? data;
       setCurEditorValue(d);
