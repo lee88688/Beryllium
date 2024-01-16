@@ -1,5 +1,4 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
-import { useLatest } from "ahooks";
 import { type Contents, type Location } from "epubjs";
 import Popper, { type PopperProps } from "@mui/material/Popper";
 import { HighlightEditor } from "y/components/highlightEditor";
@@ -10,6 +9,8 @@ import { MarkType } from "y/utils/constants";
 import { EpubReader } from "y/utils/epubReader";
 import { useMutation } from "@tanstack/react-query";
 import { useTheme } from "@mui/material/styles";
+import { useMemoizedFn, useLatest, usePrevious } from "ahooks";
+import useVirtualKeyboard from "y/hooks/useVirtualKeyboard";
 
 // window.EpubCFI = EpubCFI;
 
@@ -50,7 +51,8 @@ export function useReader({
 }: UseReaderProps) {
   const epubReaderRef = useRef<EpubReader>();
 
-  const anchorEl = useRef<VirtualElement>();
+  // const anchorEl = useRef<VirtualElement>();
+  const [anchorEl, setAnchorEl] = useState<VirtualElement | undefined>();
   const [openPopover, setOpenPopover] = useState(false);
   const [curEditorValue, setCurEditorValue] = useState<EditorValue>(
     EMPTY_EDITOR_VALUE(bookId),
@@ -60,8 +62,6 @@ export function useReader({
 
   // point curEditorValueRef to curEditorValue
   curEditorValueRef.current = curEditorValue;
-
-  const highlightListRef = useLatest(highlightList);
 
   const theme = useTheme();
 
@@ -83,7 +83,8 @@ export function useReader({
 
   const clearHighlightEditor = useCallback(
     (hidden?: boolean) => {
-      anchorEl.current = undefined;
+      // anchorEl.current = undefined;
+      setAnchorEl(undefined);
       setOpenPopover(hidden ?? false);
       setCurEditorValue(EMPTY_EDITOR_VALUE(bookId));
     },
@@ -106,10 +107,10 @@ export function useReader({
         handleSelectionChange,
       );
 
-      anchorEl.current = {
+      setAnchorEl({
         // nodeType: 1,
         getBoundingClientRect: () => rect,
-      };
+      });
 
       const title = getElementHeading(
         range.commonAncestorContainer as HTMLElement,
@@ -134,36 +135,32 @@ export function useReader({
     [clearHighlightEditor],
   );
 
-  const handleMarkClick = useCallback(
+  const { isSupported, boundingRect, isKeyboardOpen } = useVirtualKeyboard();
+
+  const handleMarkClick = useMemoizedFn(
     (epubcfi: string, data: EditorValue, g: SVGGElement) => {
-      let preRect: DOMRect = g.getBoundingClientRect();
-      anchorEl.current = {
+      const preRect: DOMRect = g.getBoundingClientRect();
+      setAnchorEl({
         getBoundingClientRect: () => {
           // when editor input click and virtual keyboard show
-          // svg may dispear
-          const rect = g.getBoundingClientRect();
-          if (rect.width !== 0) {
-            preRect = rect;
-            return rect;
+          // svg may dispear and keep the position
+          let rect = g.getBoundingClientRect();
+          if (rect.width === 0) {
+            rect = preRect;
           }
-          return preRect;
+          return rect;
         },
-      };
+      });
       // anchorEl.current = g;
-      const d =
-        highlightListRef.current.find((item) => item.id === data.id) ?? data;
+      const d = highlightList.find((item) => item.id === data.id) ?? data;
       setCurEditorValue(d);
       setOpenPopover(true);
     },
-    [highlightListRef],
   );
 
-  const handleRelocated = useCallback(
-    (location: Location) => {
-      onLocationChange(location.start.href);
-    },
-    [onLocationChange],
-  );
+  const handleRelocated = useMemoizedFn((location: Location) => {
+    onLocationChange(location.start.href);
+  });
 
   useEffect(() => {
     const epubReader = new EpubReader(opfUrl, "viewer");
@@ -261,10 +258,32 @@ export function useReader({
     [curEditorValue, onHighlightRefetch, removeMutate],
   );
 
+  const preAnchorEl = usePrevious(anchorEl);
+  const isKeyboardOpenRef = useRef(isKeyboardOpen);
+  if (isSupported && isKeyboardOpenRef.current !== isKeyboardOpen) {
+    // when virtual keyboard api is supported
+    // use virtual keyboard boundingRect to calculate position
+    isKeyboardOpenRef.current = isKeyboardOpen;
+    if (isKeyboardOpen) {
+      const rect = anchorEl?.getBoundingClientRect();
+      setAnchorEl({
+        getBoundingClientRect: () => {
+          const r = DOMRect.fromRect(rect);
+          r.x = window.innerWidth / 2;
+          r.width = 0;
+          r.y = window.innerHeight - (boundingRect?.height ?? 0) - r.height;
+          return r;
+        },
+      });
+    } else {
+      setAnchorEl(preAnchorEl);
+    }
+  }
+
   const bookItem = (
     <React.Fragment>
       <div id="viewer" style={{ height: "100%", width: "100%" }}></div>
-      <Popper open={openPopover} anchorEl={anchorEl.current} placement="bottom">
+      <Popper open={openPopover} anchorEl={anchorEl} placement="top">
         <HighlightEditor
           {...curEditorValue}
           onChange={handleEditorChange}
