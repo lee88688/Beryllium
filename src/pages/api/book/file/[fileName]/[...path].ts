@@ -18,7 +18,7 @@ const handler: NextApiHandler = async (req, res) => {
   if (contentType) {
     res.appendHeader("Content-Type", contentType);
   }
-  res.appendHeader("Cache-Control", "max-age=60");
+  res.appendHeader("Cache-Control", "private,max-age=31536000,immutable");
   res.send(file);
 };
 
