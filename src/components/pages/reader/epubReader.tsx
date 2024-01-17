@@ -9,7 +9,7 @@ import { MarkType } from "y/utils/constants";
 import { EpubReader } from "y/utils/epubReader";
 import { useMutation } from "@tanstack/react-query";
 import { useTheme } from "@mui/material/styles";
-import { useMemoizedFn, useLatest, usePrevious } from "ahooks";
+import { useMemoizedFn, usePrevious } from "ahooks";
 import useVirtualKeyboard from "y/hooks/useVirtualKeyboard";
 
 // window.EpubCFI = EpubCFI;
