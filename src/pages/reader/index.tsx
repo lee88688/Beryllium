@@ -13,6 +13,7 @@ import { useTheme } from "@mui/material/styles";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import { makeStyles } from "y/utils/makesStyles";
 import { useReader } from "y/components/pages/reader/epubReader";
+import BookmarkTitle from "y/components/pages/reader/bookmarkTitle";
 import {
   apiUpdateBookCurrent,
   getFileUrl,
@@ -41,6 +42,7 @@ import {
 } from "y/components/nestedList";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import useScreenWakeLock from "y/hooks/useScreenWakeLock";
+import { type CreateMarkParams } from "../api/mark/create";
 
 const useStyles = makeStyles()((theme) => ({
   root: { display: "flex", flexDirection: "row-reverse" },
@@ -163,27 +165,6 @@ export default function Reader(props: ReaderProps) {
     void router.prefetch("/bookshelf");
   }, [router]);
 
-  const addBookmark = async () => {
-    if (!epubReaderRef.current) return;
-
-    const location = await epubReaderRef.current.currentLocation();
-    const cfi = location.start.cfi;
-    const range = epubReaderRef.current.getRange(cfi);
-    const title = range.startContainer
-      ? getElementHeading(range.startContainer as HTMLElement)
-      : "";
-    await addMark({
-      bookId: id,
-      type: MarkType.Bookmark,
-      selectedString: truncate(range.startContainer.textContent ?? ""),
-      epubcfi: cfi,
-      title,
-      color: "",
-      content: "",
-    });
-    await bookmarkListQuery.refetch();
-  };
-
   const reportCurrentLocation = useCallback(async () => {
     const location = await epubReaderRef.current?.currentLocation();
     const cfi = location?.start?.cfi;
@@ -227,6 +208,45 @@ export default function Reader(props: ReaderProps) {
       highlightListQuery.refetch(),
     ]);
     epubReaderRef.current?.removeHighlightById(mark.id);
+  };
+
+  // add or update bookmark
+  const [bookmarkTitleOpen, setBookmarkTitleOpen] = useState(false);
+  const [bookmarkTitle, setBookmarkTitle] = useState("");
+  const createBookmarkRef = useRef<CreateMarkParams | undefined>();
+
+  const addBookmark = async () => {
+    if (!epubReaderRef.current) return;
+
+    const location = await epubReaderRef.current.currentLocation();
+    const cfi = location.start.cfi;
+    const range = epubReaderRef.current.getRange(cfi);
+    const title = range.startContainer
+      ? getElementHeading(range.startContainer as HTMLElement)
+      : "";
+    createBookmarkRef.current = {
+      bookId: id,
+      type: MarkType.Bookmark,
+      selectedString: truncate(range.startContainer.textContent ?? ""),
+      epubcfi: cfi,
+      title,
+      color: "",
+      content: "",
+    };
+    setBookmarkTitleOpen(true);
+    setBookmarkTitle(title);
+  };
+
+  const handleBookmarkTitleConfirm = async (title: string) => {
+    if (!createBookmarkRef.current) return;
+
+    setBookmarkTitleOpen(false);
+    await addMark({
+      ...createBookmarkRef.current,
+      title,
+    });
+    createBookmarkRef.current = undefined;
+    await bookmarkListQuery.refetch();
   };
 
   return (
@@ -285,6 +305,12 @@ export default function Reader(props: ReaderProps) {
           className={cx(classes.pageIcon, classes.next)}
         />
       </main>
+      <BookmarkTitle
+        open={bookmarkTitleOpen}
+        title={bookmarkTitle}
+        onCancel={() => setBookmarkTitleOpen(false)}
+        onConfirm={handleBookmarkTitleConfirm}
+      />
     </div>
   );
 }

@@ -17,11 +17,15 @@ export default function useVirtualKeyboard() {
         }
       };
       navigator.virtualKeyboard.addEventListener("geometrychange", fn);
-      navigator.virtualKeyboard.overlaysContent = true;
+      if (!navigator.virtualKeyboard.overlaysContent) {
+        navigator.virtualKeyboard.overlaysContent = true;
+      }
 
       return () => {
         navigator.virtualKeyboard.removeEventListener("geometrychange", fn);
-        navigator.virtualKeyboard.overlaysContent = false;
+        if (navigator.virtualKeyboard.overlaysContent) {
+          navigator.virtualKeyboard.overlaysContent = false;
+        }
       };
     }
   }, [isSupported]);
