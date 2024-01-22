@@ -25,6 +25,7 @@ import ExitToApp from "@mui/icons-material/ExitToApp";
 import Settings from "@mui/icons-material/Settings";
 import { Box, Hidden, SwipeableDrawer } from "@mui/material";
 import Typography from "@mui/material/Typography";
+import DialogKb from "y/components/dialogKb";
 
 export const useDrawerStyles = makeStyles()((theme) => ({
   drawer: {
@@ -159,7 +160,7 @@ export function BookshelfDrawer(props: BookshelfDrawerProps) {
   };
 
   const addCategoryDialog = (
-    <Dialog open={categoryDialog} classes={{ paper: classes.dialogPaper }}>
+    <DialogKb open={categoryDialog} classes={{ paper: classes.dialogPaper }}>
       <DialogTitle>添加类别</DialogTitle>
       <DialogContent>
         <Box sx={{ pt: 1 }}>
@@ -185,7 +186,7 @@ export function BookshelfDrawer(props: BookshelfDrawerProps) {
           创建
         </Button>
       </DialogActions>
-    </Dialog>
+    </DialogKb>
   );
 
   return (

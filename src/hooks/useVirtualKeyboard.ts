@@ -1,9 +1,13 @@
 import { useEffect, useState } from "react";
+import { useAtom } from "jotai";
+import { overlaysContentCountAtom } from "y/store/virtualKeyboard";
 
 export default function useVirtualKeyboard() {
   const [boundingRect, setBoundingRect] = useState<DOMRect | undefined>();
   const [isKeyboardOpen, setIsKeyboardOpen] = useState(false);
   const isSupported = "virtualKeyboard" in navigator;
+  // this atom is used for multiple calls
+  const [, setOverlaysContentCount] = useAtom(overlaysContentCountAtom);
 
   useEffect(() => {
     if (isSupported) {
@@ -20,15 +24,21 @@ export default function useVirtualKeyboard() {
       if (!navigator.virtualKeyboard.overlaysContent) {
         navigator.virtualKeyboard.overlaysContent = true;
       }
+      setOverlaysContentCount((c) => c + 1);
 
       return () => {
         navigator.virtualKeyboard.removeEventListener("geometrychange", fn);
-        if (navigator.virtualKeyboard.overlaysContent) {
-          navigator.virtualKeyboard.overlaysContent = false;
-        }
+        setOverlaysContentCount((c) => {
+          if (c <= 0) return c;
+          const next = c - 1;
+          if (next <= 0 && navigator.virtualKeyboard.overlaysContent) {
+            navigator.virtualKeyboard.overlaysContent = false;
+          }
+          return next;
+        });
       };
     }
-  }, [isSupported]);
+  }, [isSupported, setOverlaysContentCount]);
 
   return {
     isSupported,
