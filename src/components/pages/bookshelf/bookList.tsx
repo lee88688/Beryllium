@@ -3,6 +3,7 @@ import { makeStyles } from "y/utils/makesStyles";
 import MoreVert from "@mui/icons-material/MoreVert";
 import Grid from "@mui/material/Grid";
 import IconButton from "@mui/material/IconButton";
+import Box from "@mui/material/Box";
 import ImageListItem from "@mui/material/ImageListItem";
 import ImageListItemBar from "@mui/material/ImageListItemBar";
 import Menu from "@mui/material/Menu";
@@ -40,6 +41,13 @@ const useGridItemStyles = makeStyles()(() => ({
   },
   paper: {
     position: "relative",
+  },
+  menuIconWrap: {
+    width: "100%",
+    minHeight: "40px",
+    position: "absolute",
+    zIndex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.2)",
   },
   menuIcon: {
     position: "absolute",
@@ -84,13 +92,15 @@ function BookShelfItem(props: BookShelfItemProps) {
   return (
     <Grid className={classes.gridItem} item>
       <Paper elevation={2} className={classes.paper} onClick={onClick}>
-        <IconButton
-          className={classes.menuIcon}
-          onClick={menuOpen}
-          size="small"
-        >
-          <MoreVert />
-        </IconButton>
+        <Box className={classes.menuIconWrap}>
+          <IconButton
+            className={classes.menuIcon}
+            onClick={menuOpen}
+            size="small"
+          >
+            <MoreVert />
+          </IconButton>
+        </Box>
         <ImageListItem
           component="div"
           classes={{
