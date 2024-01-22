@@ -1,4 +1,10 @@
-import React, { useState, useRef, useEffect, useCallback } from "react";
+import React, {
+  useState,
+  useRef,
+  useEffect,
+  useCallback,
+  useMemo,
+} from "react";
 import { type Contents, type Location } from "epubjs";
 import Popper, { type PopperProps } from "@mui/material/Popper";
 import { HighlightEditor } from "y/components/highlightEditor";
@@ -25,6 +31,7 @@ type UseReaderProps = {
   bookId: number;
   startCfi: string;
   highlightList: Prisma.Mark[];
+  containerEl: HTMLElement | null;
   onHighlightRefetch: () => void;
   onLocationChange: (href: string) => void;
 };
@@ -46,6 +53,7 @@ export function useReader({
   bookId,
   startCfi,
   highlightList,
+  containerEl,
   onHighlightRefetch,
   onLocationChange,
 }: UseReaderProps) {
@@ -280,10 +288,27 @@ export function useReader({
     }
   }
 
+  const modifiers = useMemo(() => {
+    return [
+      {
+        name: "flip",
+        options: {
+          rootBoundary: containerEl ?? "document",
+        },
+      },
+    ];
+  }, [containerEl]);
+
   const bookItem = (
     <React.Fragment>
       <div id="viewer" style={{ height: "100%", width: "100%" }}></div>
-      <Popper open={openPopover} anchorEl={anchorEl} placement="top">
+      <Popper
+        open={openPopover}
+        anchorEl={anchorEl}
+        container={containerEl}
+        placement="top"
+        modifiers={modifiers}
+      >
         <HighlightEditor
           {...curEditorValue}
           onChange={handleEditorChange}

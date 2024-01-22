@@ -63,7 +63,6 @@ const useStyles = makeStyles()((theme) => ({
     maxHeight: "100%",
     overflow: "hidden",
     flexGrow: 1,
-    padding: theme.spacing(3),
     "& $shim": {
       // display: 'none',
       flexShrink: 0,
@@ -75,6 +74,7 @@ const useStyles = makeStyles()((theme) => ({
   content: {
     flexGrow: 1,
     overflow: "hidden",
+    padding: theme.spacing(2),
   },
   pageIcon: {
     display: "none",
@@ -144,11 +144,14 @@ export default function Reader(props: ReaderProps) {
     mutationFn: (id: number) => removeMark(id),
   });
 
+  const containerElRef = useRef<HTMLElement>(null);
+
   const { bookItem, nextPage, prevPage, epubReaderRef } = useReader({
     highlightList,
     opfUrl: contentUrl,
     bookId: id,
     startCfi: cfi,
+    containerEl: containerElRef.current,
     onHighlightRefetch: refetchHighlightList,
     onLocationChange: setCurrentTocItem,
   });
@@ -295,7 +298,9 @@ export default function Reader(props: ReaderProps) {
       />
       <main className={classes.main}>
         <Toolbar />
-        <div className={classes.content}>{bookItem}</div>
+        <div ref={containerElRef} className={classes.content}>
+          {bookItem}
+        </div>
         <ArrowBackIosIcon
           onClick={prevPage}
           className={cx(classes.pageIcon, classes.prev)}
