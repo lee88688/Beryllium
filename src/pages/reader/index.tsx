@@ -43,6 +43,7 @@ import {
 import { useMutation, useQuery } from "@tanstack/react-query";
 import useScreenWakeLock from "y/hooks/useScreenWakeLock";
 import { type CreateMarkParams } from "../api/mark/create";
+import { ImagePreview } from "y/components/pages/reader/imagePreview";
 
 const useStyles = makeStyles()((theme) => ({
   root: { display: "flex", flexDirection: "row-reverse" },
@@ -144,7 +145,7 @@ export default function Reader(props: ReaderProps) {
     mutationFn: (id: number) => removeMark(id),
   });
 
-  const containerElRef = useRef<HTMLElement>(null);
+  const containerElRef = useRef<HTMLDivElement>(null);
 
   const { bookItem, nextPage, prevPage, epubReaderRef } = useReader({
     highlightList,
@@ -316,6 +317,7 @@ export default function Reader(props: ReaderProps) {
         onCancel={() => setBookmarkTitleOpen(false)}
         onConfirm={handleBookmarkTitleConfirm}
       />
+      <ImagePreview />
     </div>
   );
 }
