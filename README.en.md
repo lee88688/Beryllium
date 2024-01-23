@@ -1,22 +1,20 @@
 # Beryllium
 
-专注于自部署的在线epub阅读器
+build epub reader for self hosted
 
-[English Version](./README.en.md)
+## features
 
-## 特性
+- easy to deploy, and you own all of your data
+- desktop and mobile support
+- dark mode
+- bookmark and highlight support
+- multi-user support
 
-- 易于部署，只需要一个docker镜像就完成
-- 同时支持桌面端和移动端web页面
-- 暗黑模式
-- 支持书签和内容标记
-- 支持多用户
+## how to use
 
-## 如何使用
+if you want to build from source, see `how to develop` below.
 
-如果你想要从源码构建，请参考`如何开发`。
-
-通常情况下，你只需要使用[docker镜像](https://hub.docker.com/r/lee88688/beryllium)，下面是docker compose配置示例，docker cli参数也可以参考下方的配置。
+generally, you should use [docker image](https://hub.docker.com/r/lee88688/beryllium) directly. here is the example of docker compose config.
 
 ```yaml
 version: "3"
@@ -26,23 +24,23 @@ services:
     ports:
       - 3000:3000
     environment:
-      # 这个环境变量是必须添加的，不要在密码两侧添加引号
-      # 在首次创建的时候使用，在数据库中存在admin账户后不再使用
+      # this env should be add, do not add quote to password string
+      # this is used for startup. when admin user is created, this is no longer need.
       - ADMIN_USER_PASSWORD=some-password
-      # 默认的admin账户名称为 admin,
-      # 如果你想要修改admin账户的名称可以参考下面的配置
+      # the default admin user name is admin,
+      # if you want to rename, please uncomment this line
       # - ADMIN_USER_NAME=some-other-name
     volumes:
       - /path/to/data:/app/data
 ```
 
-`/app/data/db.sqlite` 是数据库的路径, `/app/data/asar` 用于存储电子书的路径。
+`/app/data/db.sqlite` stores the database, and `/app/data/asar` stores the upload epub files.
 
-### 注意
+### NOTE
 
-epub文件在上传后会被转换成asar文件格式，asar文件与tar文件类似存储的是epub文件解压之后的文件。如果你想要后续再使用上传的epub文件，那就不要删除epub文件。epub文件是无法再从服务器上在此下载的。
+the epub file uploaded from the user will be transformed into the asar file format. the asar file is just like tar file which combine the extracted files inside epub into one. so you should keep you epub files if you want to reuse them later. and there is a way to convert asar file to epub.
 
-## 如何开发
+## how to development
 
 - create `.env` file, like `.env.example`
 - prisma

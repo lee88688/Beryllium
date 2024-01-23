@@ -128,7 +128,7 @@ export default function Bookshelf(props: BookshelfProps) {
   };
 
   const handleSelectFile = async (file: File) => {
-    const snackbarId = enqueueSnackbar("upload file, please wait.", {
+    const snackbarId = enqueueSnackbar("正在上传文件，请不进行其他操作", {
       variant: "success",
       persist: true,
     });
@@ -141,7 +141,7 @@ export default function Bookshelf(props: BookshelfProps) {
     params: { categoryId: number; bookId: number }[],
   ) => {
     await apiAddBooksToCategory(params);
-    enqueueSnackbar("add successful", { variant: "success" });
+    enqueueSnackbar("添加成功", { variant: "success" });
     await categoryQuery.refetch();
   };
 
