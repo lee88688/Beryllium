@@ -10,6 +10,7 @@ declare global {
     eruda: {
       init: () => void;
     };
+    $$openImagePreview?: (image: string) => void;
   }
 
   interface Navigator {
