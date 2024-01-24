@@ -34,12 +34,13 @@ COPY --from=builder /app/public ./public
 
 RUN mkdir .next
 
+# migration need prisma, but next standalone mode will not include this.
+# install first and then copy standalone's node_modules to void installing package.josn's package.
+RUN npm install --no-save --registry=http://registry.npmmirror.com prisma@^5.6.0 && npm cache clean --force
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/prisma ./prisma
-COPY --from=builder /app/package.json /app/package-lock.json* ./
+# COPY --from=builder /app/package.json /app/package-lock.json* ./
 COPY --from=builder /app/.next/static ./.next/static
-
-# RUN npm install --production --registry=http://registry.npmmirror.com && npm cache clean --force
 
 # without this, instrumentation can't execute
 # standalone mode does not need this
