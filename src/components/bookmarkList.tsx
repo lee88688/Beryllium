@@ -24,10 +24,11 @@ const useStyles = makeStyles()(() => ({
 type BookmarkListItemProps = Prisma.Mark & {
   onClick: (params: Prisma.Mark) => void;
   onRemove: (mark: Prisma.Mark) => void;
+  onModify: (mark: Prisma.Mark) => void;
 };
 
 function BookmarkListItem(props: BookmarkListItemProps) {
-  const { title, selectedString, onClick, onRemove } = props;
+  const { title, selectedString, onClick, onRemove, onModify } = props;
   const { classes } = useStyles();
   const [menuAnchorEl, setMenuAnchorEl] = useState<HTMLElement>();
 
@@ -44,6 +45,12 @@ function BookmarkListItem(props: BookmarkListItemProps) {
     e.stopPropagation(); // for menu is in the button, clicking menu will trigger button again without stopPropagation
     setMenuAnchorEl(undefined);
     onRemove(props);
+  };
+
+  const modifyTitle = (e: React.MouseEvent<HTMLElement>) => {
+    e.stopPropagation();
+    setMenuAnchorEl(undefined);
+    onModify(props);
   };
 
   const stopPropagation = (e: React.UIEvent<HTMLButtonElement>) =>
@@ -72,6 +79,7 @@ function BookmarkListItem(props: BookmarkListItemProps) {
               onClose={menuClose}
               keepMounted
             >
+              <MenuItem onClick={modifyTitle}>修改标题</MenuItem>
               <MenuItem onClick={removeBookmark}>删除</MenuItem>
             </Menu>
           </IconButton>
@@ -86,11 +94,12 @@ function BookmarkListItem(props: BookmarkListItemProps) {
 type BookmarkListProps = {
   onClick: (params: { epubcfi: string }) => void;
   onRemove: (mark: Prisma.Mark) => void;
+  onModify: (mark: Prisma.Mark) => void;
   bookmarkList: Prisma.Mark[];
 };
 
 export function BookmarkList(props: BookmarkListProps) {
-  const { onClick, bookmarkList, onRemove } = props;
+  const { onClick, bookmarkList, onRemove, onModify } = props;
 
   const list = useMemo(
     () => (
@@ -101,11 +110,12 @@ export function BookmarkList(props: BookmarkListProps) {
             {...item}
             onClick={onClick}
             onRemove={onRemove}
+            onModify={onModify}
           />
         ))}
       </List>
     ),
-    [bookmarkList, onClick, onRemove],
+    [bookmarkList, onClick, onModify, onRemove],
   );
 
   return list;

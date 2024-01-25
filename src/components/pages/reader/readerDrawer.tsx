@@ -89,6 +89,7 @@ type ReaderDrawerProps = {
   onClickToc: NestedListItemClick;
   onClickHighlight: (params: { epubcfi: string }) => void;
   onRemoveMark: (mark: Prisma.Mark) => void;
+  onModifyMark: (mark: Prisma.Mark) => void;
 };
 
 export function ReaderDrawer(props: ReaderDrawerProps) {
@@ -102,6 +103,7 @@ export function ReaderDrawer(props: ReaderDrawerProps) {
     onClickToc,
     onClickHighlight,
     onRemoveMark,
+    onModifyMark,
   } = props;
 
   const [tabIndex, setTabIndex] = useState(0);
@@ -152,6 +154,7 @@ export function ReaderDrawer(props: ReaderDrawerProps) {
           bookmarkList={bookmarks}
           onClick={onClickHighlight}
           onRemove={onRemoveMark}
+          onModify={onModifyMark}
         />
       </TabPanel>
     </div>
