@@ -10,7 +10,7 @@ WORKDIR /app
 
 # Install dependencies based on the preferred package manager
 COPY package.json package-lock.json* prisma ./
-RUN npm ci --registry=http://registry.npmmirror.com;
+RUN npm ci
 
 # Rebuild the source code only when needed
 FROM base AS builder
@@ -36,7 +36,7 @@ RUN mkdir .next
 
 # migration need prisma, but next standalone mode will not include this.
 # install first and then copy standalone's node_modules to void installing package.josn's package.
-RUN npm install --no-save --registry=http://registry.npmmirror.com prisma@^5.6.0 && npm cache clean --force
+RUN npm install --no-save prisma@^5.6.0 && npm cache clean --force && rm -rf /root/.cache
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/prisma ./prisma
 # COPY --from=builder /app/package.json /app/package-lock.json* ./

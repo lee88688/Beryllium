@@ -16,6 +16,7 @@ import { useReader } from "y/components/pages/reader/epubReader";
 import BookmarkTitle from "y/components/pages/reader/bookmarkTitle";
 import {
   apiUpdateBookCurrent,
+  apiUpdateMark,
   getFileUrl,
   getMark,
   removeMark,
@@ -44,6 +45,8 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import useScreenWakeLock from "y/hooks/useScreenWakeLock";
 import { type CreateMarkParams } from "../api/mark/create";
 import { ImagePreview } from "y/components/pages/reader/imagePreview";
+import { useMemoizedFn } from "ahooks";
+import { type UpdateMarkParams } from "../api/mark/update";
 
 const useStyles = makeStyles()((theme) => ({
   root: { display: "flex", flexDirection: "row-reverse" },
@@ -189,35 +192,33 @@ export default function Reader(props: ReaderProps) {
     return reportCurrentLocation();
   };
 
-  const handleTocClick = useCallback<NestedListItemClick>(
-    ({ src }) => {
-      // do not update, keep current nest list's open state
-      // setCurrentTocItem(src);
-      return epubReaderRef.current?.display(src);
-    },
-    [epubReaderRef],
-  );
+  const handleTocClick = useMemoizedFn<NestedListItemClick>(({ src }) => {
+    // do not update, keep current nest list's open state
+    // setCurrentTocItem(src);
+    return epubReaderRef.current?.display(src);
+  });
 
-  const handleHighlightClick = useCallback(
+  const handleHighlightClick = useMemoizedFn(
     ({ epubcfi }: Pick<Prisma.Mark, "epubcfi">) => {
       return epubReaderRef.current?.display(epubcfi);
     },
-    [epubReaderRef],
   );
 
-  const handleRemoveMark = async (mark: Prisma.Mark) => {
+  const handleRemoveMark = useMemoizedFn(async (mark: Prisma.Mark) => {
     await removeMarkMutation.mutateAsync(mark.id);
     await Promise.all([
       bookmarkListQuery.refetch(),
       highlightListQuery.refetch(),
     ]);
     epubReaderRef.current?.removeHighlightById(mark.id);
-  };
+  });
 
   // add or update bookmark
   const [bookmarkTitleOpen, setBookmarkTitleOpen] = useState(false);
   const [bookmarkTitle, setBookmarkTitle] = useState("");
-  const createBookmarkRef = useRef<CreateMarkParams | undefined>();
+  const createOrUpdateBookmarkRef = useRef<
+    CreateMarkParams | UpdateMarkParams | undefined
+  >();
 
   const addBookmark = async () => {
     if (!epubReaderRef.current) return;
@@ -228,7 +229,7 @@ export default function Reader(props: ReaderProps) {
     const title = range.startContainer
       ? getElementHeading(range.startContainer as HTMLElement)
       : "";
-    createBookmarkRef.current = {
+    createOrUpdateBookmarkRef.current = {
       bookId: id,
       type: MarkType.Bookmark,
       selectedString: truncate(range.startContainer.textContent ?? ""),
@@ -242,16 +243,33 @@ export default function Reader(props: ReaderProps) {
   };
 
   const handleBookmarkTitleConfirm = async (title: string) => {
-    if (!createBookmarkRef.current) return;
+    if (!createOrUpdateBookmarkRef.current) return;
 
     setBookmarkTitleOpen(false);
-    await addMark({
-      ...createBookmarkRef.current,
-      title,
-    });
-    createBookmarkRef.current = undefined;
+    const mark = createOrUpdateBookmarkRef.current;
+    if ((mark as UpdateMarkParams).id) {
+      await apiUpdateMark({
+        ...(mark as UpdateMarkParams),
+        title,
+      });
+    } else {
+      await addMark({
+        ...(mark as CreateMarkParams),
+        title,
+      });
+    }
+    createOrUpdateBookmarkRef.current = undefined;
     await bookmarkListQuery.refetch();
   };
+
+  const handleModifyMark = useMemoizedFn((mark: Prisma.Mark) => {
+    createOrUpdateBookmarkRef.current = {
+      id: mark.id,
+      title: mark.title,
+    } as UpdateMarkParams;
+    setBookmarkTitleOpen(true);
+    setBookmarkTitle(mark.title);
+  });
 
   return (
     <div className={classes.root}>
@@ -296,6 +314,7 @@ export default function Reader(props: ReaderProps) {
         onClickToc={handleTocClick}
         onClickHighlight={handleHighlightClick}
         onRemoveMark={handleRemoveMark}
+        onModifyMark={handleModifyMark}
       />
       <main className={classes.main}>
         <Toolbar />
