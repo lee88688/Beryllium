@@ -1,19 +1,17 @@
-import type { IronSessionOptions } from "iron-session";
+import type { SessionOptions } from "iron-session";
 import type { LRUCache } from "lru-cache";
 import { type EasyAsar } from "asar-async";
 import { env } from "y/env.mjs";
 
-declare module "iron-session" {
-  interface IronSessionData {
-    user: {
-      id: number;
-    };
-  }
+export interface SessionData {
+  user: {
+    id: number;
+  };
 }
 
-export const ironOptions: IronSessionOptions = {
+export const ironOptions: SessionOptions = {
   cookieName: "sealed",
-  password: "complex_password_at_least_32_characters_long",
+  password: env.SESSION_SECRET,
   // secure: true should be used in production (HTTPS) but can't be used in development (HTTP)
   cookieOptions: {
     secure: false,

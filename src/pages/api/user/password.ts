@@ -1,7 +1,9 @@
-import type { NextApiHandler } from "next";
-import { withSessionRoute } from "y/server/wrap";
+import {
+  type NextApiHandlerWithSession,
+  withSessionRoute,
+  withValidateWithSession,
+} from "y/server/wrap";
 import { createSuccessRes } from "y/utils/apiResponse";
-import { withValidate } from "y/server/wrap";
 import { z } from "zod";
 import { prisma } from "y/server/db";
 
@@ -11,9 +13,9 @@ const passwordSchema = z.object({
 
 export type PasswordParams = z.infer<typeof passwordSchema>;
 
-const handler: NextApiHandler = async (req, res) => {
+const handler: NextApiHandlerWithSession = async (req, res, session) => {
   const { password } = req.body as PasswordParams;
-  const userId = req.session.user.id;
+  const userId = session.user.id;
 
   await prisma.user.update({
     where: { id: userId },
@@ -24,5 +26,5 @@ const handler: NextApiHandler = async (req, res) => {
 };
 
 export default withSessionRoute(
-  withValidate(handler, { body: passwordSchema }),
+  withValidateWithSession(handler, { body: passwordSchema }),
 );

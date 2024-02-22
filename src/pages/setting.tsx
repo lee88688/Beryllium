@@ -4,14 +4,10 @@ import Toolbar from "@mui/material/Toolbar";
 import IconButton from "@mui/material/IconButton";
 import List from "@mui/material/List";
 import ListItem from "@mui/material/ListItem";
-import ListItemButton from "@mui/material/ListItemButton";
-import ListItemText from "@mui/material/ListItemText";
 import ListSubheader from "@mui/material/ListSubheader";
-import ListItemIcon from "@mui/material/ListItemIcon";
 import Card from "@mui/material/Card";
 import CardActions from "@mui/material/CardActions";
 import CardContent from "@mui/material/CardContent";
-import Button from "@mui/material/Button";
 import Typography from "@mui/material/Typography";
 import TextField from "@mui/material/TextField";
 import Box from "@mui/material/Box";
@@ -33,7 +29,7 @@ import {
   apiCreateUser,
   apiDeleteUser,
   apiUserList,
-} from "../clientApi";
+} from "y/clientApi";
 import { type GetServerSideProps } from "next";
 import { prisma } from "y/server/db";
 import { withSessionSsr } from "y/server/wrap";
@@ -242,8 +238,8 @@ export default function Setting(props: SettingProps) {
 }
 
 export const getServerSideProps: GetServerSideProps<SettingProps> =
-  withSessionSsr(async ({ req }) => {
-    const userId = req.session.user.id;
+  withSessionSsr(async (params, session) => {
+    const userId = session.user.id;
     const user = await prisma.user.findFirst({ where: { id: userId } });
 
     return {

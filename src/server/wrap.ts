@@ -1,31 +1,43 @@
-import type { GetServerSideProps, NextApiHandler } from "next";
+import type {
+  GetServerSideProps,
+  NextApiHandler,
+  NextApiRequest,
+  NextApiResponse,
+} from "next";
 import { isAdmin } from "./service/user";
-import { type ZodTypeAny, type ZodError } from "zod";
+import { type ZodError, type ZodTypeAny } from "zod";
 import { createFailRes } from "y/utils/apiResponse";
-import { withIronSessionApiRoute } from "iron-session/next";
-import { withIronSessionSsr } from "iron-session/next";
-import { ironOptions } from "y/config";
+import { getIronSession, type IronSession } from "iron-session";
+import { ironOptions, type SessionData } from "y/config";
+
+export type NextApiHandlerWithSession = (
+  req: NextApiRequest,
+  res: NextApiResponse,
+  session: IronSession<SessionData>,
+) => ReturnType<NextApiHandler>;
 
 export const withAdmin = (handler: NextApiHandler): NextApiHandler => {
-  const fn: NextApiHandler = async (req, res) => {
-    const userId = req.session.user.id;
+  return async (req, res) => {
+    const session = await getIronSession<SessionData>(req, res, ironOptions);
+    const userId = session.user.id;
     if (!(await isAdmin(userId))) {
       return res.status(401).json({ isSuccess: false });
     }
     return handler(req, res);
   };
-
-  return fn;
 };
 
-export const withValidate = <T extends ZodTypeAny, K extends ZodTypeAny>(
-  handler: NextApiHandler,
+export const withValidateWithSession = <
+  T extends ZodTypeAny,
+  K extends ZodTypeAny,
+>(
+  handler: NextApiHandlerWithSession,
   options: {
     query?: T;
     body?: K;
   },
 ) => {
-  const fn: NextApiHandler = async (req, res) => {
+  const fn: NextApiHandlerWithSession = async (req, res, session) => {
     if (options.query) {
       try {
         await options.query.parseAsync(req.query);
@@ -44,27 +56,50 @@ export const withValidate = <T extends ZodTypeAny, K extends ZodTypeAny>(
       }
     }
 
-    handler(req, res);
+    handler(req, res, session);
   };
 
   return fn;
 };
 
-export function withSessionRoute(handler: NextApiHandler) {
-  const sessionCheckHandler: NextApiHandler = (req, res) => {
-    if (!req.session.user) {
-      return res.status(401).json({ isSuccess: false, message: "Unauthrized" });
+export const withValidate = withValidateWithSession as unknown as <
+  T extends ZodTypeAny,
+  K extends ZodTypeAny,
+>(
+  handler: NextApiHandler,
+  options: {
+    query?: T;
+    body?: K;
+  },
+) => NextApiHandler;
+
+export function withSessionRoute(handler: NextApiHandlerWithSession) {
+  const sessionCheckHandler: NextApiHandler = async (req, res) => {
+    const session = await getIronSession<SessionData>(req, res, ironOptions);
+    if (!session.user) {
+      return res
+        .status(401)
+        .json({ isSuccess: false, message: "Unauthorized" });
     }
-    return handler(req, res);
+    return handler(req, res, session);
   };
-  return withIronSessionApiRoute(sessionCheckHandler, ironOptions);
+  return sessionCheckHandler;
 }
 
 export function withSessionSsr<Props extends Record<string, unknown>>(
-  handler: GetServerSideProps<Props>,
+  handler: (
+    params: Parameters<GetServerSideProps<Props>>[0],
+    session: IronSession<SessionData>,
+  ) => ReturnType<GetServerSideProps<Props>>,
 ) {
   const sessionCheckHandler: GetServerSideProps<Props> = async (params) => {
-    if (!params.req.session.user) {
+    const session = await getIronSession<SessionData>(
+      params.req,
+      params.res,
+      ironOptions,
+    );
+    console.log("ssr session", session);
+    if (!session.user) {
       return {
         redirect: {
           permanent: false,
@@ -72,7 +107,7 @@ export function withSessionSsr<Props extends Record<string, unknown>>(
         },
       };
     }
-    return handler(params);
+    return handler(params, session);
   };
-  return withIronSessionSsr(sessionCheckHandler, ironOptions);
+  return sessionCheckHandler;
 }

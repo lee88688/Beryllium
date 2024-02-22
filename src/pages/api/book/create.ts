@@ -1,5 +1,8 @@
-import type { NextApiHandler, PageConfig } from "next";
-import { withSessionRoute } from "y/server/wrap";
+import type { PageConfig } from "next";
+import {
+  type NextApiHandlerWithSession,
+  withSessionRoute,
+} from "y/server/wrap";
 import { createSuccessRes } from "y/utils/apiResponse";
 import formidable from "formidable";
 import { saveEpubFile } from "y/server/service/file";
@@ -11,8 +14,8 @@ export const config: PageConfig = {
   },
 };
 
-const handler: NextApiHandler = async (req, res) => {
-  const userId = req.session.user.id;
+const handler: NextApiHandlerWithSession = async (req, res, session) => {
+  const userId = session.user.id;
 
   const form = formidable({});
   let cacheData = Buffer.alloc(0);
