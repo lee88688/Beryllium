@@ -13,6 +13,7 @@ export const env = createEnv({
     TEMP_DIR: z.string(),
     ADMIN_USER_NAME: z.string().min(1),
     ADMIN_USER_PASSWORD: z.string().min(6),
+    SESSION_SECRET: z.string().min(32),
   },
 
   /**

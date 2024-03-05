@@ -14,12 +14,12 @@ import {
   apiGetCategory,
   apiRemoveBooksFromCategory,
   uploadBook,
-} from "../../clientApi";
+} from "y/clientApi";
 import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
 import MoreVert from "@mui/icons-material/MoreVert";
 import type * as Prisma from "@prisma/client";
-import { apiRemoveCategory } from "../../clientApi";
+import { apiRemoveCategory } from "y/clientApi";
 import { type GetServerSideProps } from "next";
 import { prisma } from "y/server/db";
 import { withSessionSsr } from "y/server/wrap";
@@ -246,8 +246,8 @@ export default function Bookshelf(props: BookshelfProps) {
 }
 
 export const getServerSideProps: GetServerSideProps<BookshelfProps> =
-  withSessionSsr(async ({ req }) => {
-    const user = req.session.user;
+  withSessionSsr(async (params, session) => {
+    const user = session.user;
 
     const books = await prisma.book.findMany({ where: { userId: user.id } });
 

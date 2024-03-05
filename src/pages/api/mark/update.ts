@@ -1,5 +1,7 @@
-import type { NextApiHandler } from "next";
-import { withSessionRoute } from "y/server/wrap";
+import {
+  type NextApiHandlerWithSession,
+  withSessionRoute,
+} from "y/server/wrap";
 import { prisma } from "y/server/db";
 import { createFailRes, createSuccessRes } from "y/utils/apiResponse";
 import type * as Prisma from "@prisma/client";
@@ -9,8 +11,8 @@ import { userHasMark } from "y/server/service/mark";
 export type UpdateMarkParams = Pick<Prisma.Mark, "id"> &
   Partial<Omit<Prisma.Mark, "id" | "bookId" | "userId">>;
 
-const handler: NextApiHandler = async (req, res) => {
-  const userId = req.session.user.id;
+const handler: NextApiHandlerWithSession = async (req, res, session) => {
+  const userId = session.user.id;
   const params = req.body as UpdateMarkParams;
 
   if (!(await userHasMark(userId, params.id))) {

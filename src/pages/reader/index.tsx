@@ -20,7 +20,7 @@ import {
   getFileUrl,
   getMark,
   removeMark,
-} from "../../clientApi";
+} from "y/clientApi";
 import {
   ReaderDrawer,
   drawerWidth,
@@ -29,7 +29,7 @@ import {
 import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
 import truncate from "lodash/truncate";
-import { addMark } from "../../clientApi";
+import { addMark } from "y/clientApi";
 import type * as Prisma from "@prisma/client";
 import { MarkType } from "y/utils/constants";
 import { type GetServerSidePropsResult, type GetServerSideProps } from "next";
@@ -360,8 +360,8 @@ export function getElementHeading(el: HTMLElement) {
 }
 
 export const getServerSideProps: GetServerSideProps<ReaderProps> =
-  withSessionSsr(async ({ req, query }) => {
-    const userId = req.session.user.id;
+  withSessionSsr(async ({ query }, session) => {
+    const userId = session.user.id;
     const bookId = Number.parseInt(query.id as string);
     const book = await prisma.book.findFirst({
       where: {

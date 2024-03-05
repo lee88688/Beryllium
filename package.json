@@ -33,7 +33,7 @@
     "eventemitter3": "^5.0.1",
     "formidable": "^3.5.1",
     "formik": "^2.2.1",
-    "iron-session": "^6.3.1",
+    "iron-session": "^8.0.1",
     "jotai": "^2.6.0",
     "lodash": "^4.17.21",
     "lru-cache": "^10.1.0",

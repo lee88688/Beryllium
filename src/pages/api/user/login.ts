@@ -1,8 +1,8 @@
 import { prisma } from "y/server/db";
 import { createFailRes, createSuccessRes } from "y/utils/apiResponse";
 import { type NextApiHandler } from "next";
-import { withIronSessionApiRoute } from "iron-session/next";
-import { ironOptions } from "y/config";
+import { getIronSession } from "iron-session";
+import { ironOptions, type SessionData } from "y/config";
 import { getPasswordHash } from "y/server/service/user";
 
 export interface LoginParam {
@@ -10,7 +10,6 @@ export interface LoginParam {
   password: string;
 }
 
-// TODO: password should encrypt
 const handler: NextApiHandler = async (req, res) => {
   const data = req.body as LoginParam;
   const password = getPasswordHash(data.password);
@@ -25,10 +24,12 @@ const handler: NextApiHandler = async (req, res) => {
     return createFailRes(res, "email or password may not be correct");
   }
 
-  req.session.user = user;
-  await req.session.save();
+  const session = await getIronSession<SessionData>(req, res, ironOptions);
+  session.user = user;
+  // (session as unknown as Record<string, unknown>).id = user.id;
+  await session.save();
 
   return createSuccessRes(res, null);
 };
 
-export default withIronSessionApiRoute(handler, ironOptions);
+export default handler;
