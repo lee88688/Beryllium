@@ -1,39 +1,33 @@
+"use client";
+
 import React, { useState } from "react";
-import AppBar from "@mui/material/AppBar";
-import Toolbar from "@mui/material/Toolbar";
-import IconButton from "@mui/material/IconButton";
-import List from "@mui/material/List";
-import ListItem from "@mui/material/ListItem";
-import ListSubheader from "@mui/material/ListSubheader";
+import { useMutation } from "@tanstack/react-query";
+import { useConfirmDialog } from "y/hooks/useConfirmDialog";
 import Card from "@mui/material/Card";
-import CardActions from "@mui/material/CardActions";
 import CardContent from "@mui/material/CardContent";
 import Typography from "@mui/material/Typography";
+import List from "@mui/material/List";
+import ListSubheader from "@mui/material/ListSubheader";
+import ListItem from "@mui/material/ListItem";
 import TextField from "@mui/material/TextField";
-import Box from "@mui/material/Box";
-import DeleteIcon from "@mui/icons-material/Delete";
-import Container from "@mui/material/Container";
-import ArrowBack from "@mui/icons-material/ArrowBack";
 import LoadingButton from "@mui/lab/LoadingButton";
+import Divider from "@mui/material/Divider";
 import Table from "@mui/material/Table";
-import TableBody from "@mui/material/TableBody";
-import TableCell from "@mui/material/TableCell";
 import TableHead from "@mui/material/TableHead";
 import TableRow from "@mui/material/TableRow";
+import TableCell from "@mui/material/TableCell";
+import TableBody from "@mui/material/TableBody";
+import IconButton from "@mui/material/IconButton";
+import DeleteIcon from "@mui/icons-material/Delete";
+import { useRouter } from "next/navigation";
+import Box from "@mui/material/Box";
+import AppBar from "@mui/material/AppBar";
+import Toolbar from "@mui/material/Toolbar";
+import ArrowBack from "@mui/icons-material/ArrowBack";
+import Container from "@mui/material/Container";
+import CardActions from "@mui/material/CardActions";
 import { makeStyles } from "y/utils/makesStyles";
-import { useRouter } from "next/router";
-import Divider from "@mui/material/Divider";
-import { useMutation, useQuery } from "@tanstack/react-query";
-import {
-  apiChangePassword,
-  apiCreateUser,
-  apiDeleteUser,
-  apiUserList,
-} from "y/clientApi";
-import { type GetServerSideProps } from "next";
-import { prisma } from "y/server/db";
-import { withSessionSsr } from "y/server/wrap";
-import { useConfirmDialog } from "y/hooks/useConfirmDialog";
+import { addUser, changePassword, removeUser } from "./actions";
 
 const useStyles = makeStyles()((theme) => ({
   root: {},
@@ -47,24 +41,20 @@ const useStyles = makeStyles()((theme) => ({
 
 type SettingProps = {
   isAdmin: boolean;
+  usersData: { id: number; username: string; isAdmin: boolean }[];
 };
 
-function AdminSetting() {
+function AdminSetting(props: Pick<SettingProps, "usersData">) {
   const [userName, setUserName] = useState("");
   const [password, setPassword] = useState("");
 
-  const userListQuery = useQuery({
-    queryKey: ["userList"] as const,
-    queryFn: () => apiUserList().then((res) => res.data),
-  });
-
-  const userList = userListQuery.data ?? [];
-
   const addMutation = useMutation({
-    mutationFn: () => apiCreateUser({ username: userName, password }),
+    mutationFn: () => addUser({ username: userName, password: password }),
   });
 
   const { dialog, openDialog, closeDialog } = useConfirmDialog();
+
+  const router = useRouter();
 
   return (
     <>
@@ -95,9 +85,9 @@ function AdminSetting() {
                 loading={addMutation.isLoading}
                 onClick={async () => {
                   await addMutation.mutateAsync();
+                  router.refresh();
                   setUserName("");
                   setPassword("");
-                  await userListQuery.refetch();
                 }}
               >
                 新增
@@ -115,7 +105,7 @@ function AdminSetting() {
               </TableRow>
             </TableHead>
             <TableBody>
-              {userList.map((row) => (
+              {props.usersData.map((row) => (
                 <TableRow
                   key={row.id}
                   sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
@@ -138,8 +128,8 @@ function AdminSetting() {
                             return;
                           }
                           closeDialog();
-                          await apiDeleteUser({ userId: row.id });
-                          return userListQuery.refetch();
+                          await removeUser({ userId: row.id });
+                          router.refresh();
                         }}
                       >
                         <DeleteIcon />
@@ -170,7 +160,7 @@ export default function Setting(props: SettingProps) {
   const { classes } = useStyles();
 
   const passwordMutation = useMutation({
-    mutationFn: () => apiChangePassword({ password }),
+    mutationFn: () => changePassword(password),
   });
 
   return (
@@ -230,19 +220,9 @@ export default function Setting(props: SettingProps) {
             </CardActions>
           </Card>
 
-          {props.isAdmin && <AdminSetting />}
+          {props.isAdmin && <AdminSetting usersData={props.usersData} />}
         </Container>
       </Box>
     </>
   );
 }
-
-export const getServerSideProps: GetServerSideProps<SettingProps> =
-  withSessionSsr(async (params, session) => {
-    const userId = session.user.id;
-    const user = await prisma.user.findFirst({ where: { id: userId } });
-
-    return {
-      props: { isAdmin: Boolean(user?.isAdmin) },
-    };
-  });
