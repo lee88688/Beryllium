@@ -9,6 +9,10 @@ import { type PropsWithChildren, useMemo } from "react";
 import { usePreferredThemeMode } from "y/hooks/usePreferredThemeMode";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
 
+// this error may keep an eye on it
+// Detected multiple Jotai instances. It may cause unexpected behavior with the default store. https://github.com/pmndrs/jotai/discussions/2044
+// when all pages move to app router, this error may go away.
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {

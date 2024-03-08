@@ -1,8 +1,24 @@
+import "server-only";
 import type { TypeOf, ZodTypeAny } from "zod";
 import { getIronSession, type IronSession } from "iron-session";
 import { ironOptions, type SessionData } from "y/config";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+
+export function withSessionAction<
+  H extends (params: null, session: IronSession<SessionData>) => unknown,
+>(
+  schema: null,
+  handler: H,
+): () => Promise<{ isSuccess: true; data: ReturnType<H> }>;
+
+export function withSessionAction<
+  Z extends ZodTypeAny,
+  H extends (params: TypeOf<Z>, session: IronSession<SessionData>) => unknown,
+>(
+  schema: Z,
+  handler: H,
+): (params: TypeOf<Z>) => Promise<{ isSuccess: true; data: ReturnType<H> }>;
 
 export function withSessionAction<
   Z extends ZodTypeAny,
@@ -14,9 +30,7 @@ export function withSessionAction<
       return { isSuccess: false, message: "Unauthorized" };
     }
 
-    const parsedParams = (await schema?.parseAsync(params)) as
-      | TypeOf<Z>
-      | undefined;
+    const parsedParams = (await schema?.parseAsync(params)) as TypeOf<Z> | null;
 
     const data = handler(parsedParams ?? params, session);
 

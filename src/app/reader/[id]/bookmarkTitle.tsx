@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useEffect, useState } from "react";
 import DialogTitle from "@mui/material/DialogTitle";
 import DialogContent from "@mui/material/DialogContent";
@@ -28,7 +30,7 @@ export default function BookmarkTitle(props: BookmarkTitleProps) {
         <Box sx={{ pt: 1 }}>
           <TextField
             value={title}
-            onInput={(e) => setTitle(e.target.value as string)}
+            onInput={(e) => setTitle((e.target as HTMLInputElement).value)}
             autoFocus
             label="请输入标题"
             fullWidth

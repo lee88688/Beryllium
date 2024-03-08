@@ -1,9 +1,9 @@
+"use client";
+
 import type * as Prisma from "@prisma/client";
-import { drawerWidth } from "../../../pages/bookshelf";
 import { makeStyles } from "y/utils/makesStyles";
 import { useState } from "react";
-import { useRouter } from "next/router";
-import { apiLogout } from "../../../clientApi";
+import { useRouter } from "next/navigation";
 import Divider from "@mui/material/Divider";
 import List from "@mui/material/List";
 import ListItem from "@mui/material/ListItem";
@@ -15,7 +15,6 @@ import ListItemIcon from "@mui/material/ListItemIcon";
 import AddIcon from "@mui/icons-material/Add";
 import BookIcon from "@mui/icons-material/Book";
 import LabelIcon from "@mui/icons-material/Label";
-import Dialog from "@mui/material/Dialog";
 import DialogTitle from "@mui/material/DialogTitle";
 import DialogContent from "@mui/material/DialogContent";
 import DialogActions from "@mui/material/DialogActions";
@@ -26,6 +25,9 @@ import Settings from "@mui/icons-material/Settings";
 import { Box, Hidden, SwipeableDrawer } from "@mui/material";
 import Typography from "@mui/material/Typography";
 import DialogKb from "y/components/dialogKb";
+import { logout } from "y/app/bookshelf/actions";
+
+export const drawerWidth = 300;
 
 export const useDrawerStyles = makeStyles()((theme) => ({
   drawer: {
@@ -86,7 +88,7 @@ export function BookshelfDrawer(props: BookshelfDrawerProps) {
   };
 
   const exitClick = async () => {
-    await apiLogout();
+    await logout();
     return router.push("/login");
   };
 

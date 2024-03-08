@@ -1,3 +1,5 @@
+"use client";
+
 import type * as Prisma from "@prisma/client";
 import { makeStyles } from "y/utils/makesStyles";
 import MoreVert from "@mui/icons-material/MoreVert";
@@ -10,15 +12,16 @@ import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
 import Paper from "@mui/material/Paper";
 import React, { useMemo, useRef, useState } from "react";
-import { type BookshelfProps } from "../../../pages/bookshelf";
+import { type BookshelfProps } from "./page";
 import AddIcon from "@mui/icons-material/Add";
 import Dialog from "@mui/material/Dialog";
 import DialogTitle from "@mui/material/DialogTitle";
 import List from "@mui/material/List";
 import ListItemButton from "@mui/material/ListItemButton";
 import ListItemText from "@mui/material/ListItemText";
-import { useRouter } from "next/router";
+import { useRouter } from "next/navigation";
 import { useSnackbar } from "notistack";
+import Image from "next/image";
 
 function getFileUrl(fileName: string, path: string) {
   return `/api/book/file/${fileName}/${path}`;
@@ -26,8 +29,6 @@ function getFileUrl(fileName: string, path: string) {
 
 const useGridItemStyles = makeStyles()(() => ({
   gridItem: {
-    // width: '180px',
-    // height: '280px',
     width: "150px",
     height: "240px",
     "& > *": {
@@ -55,6 +56,9 @@ const useGridItemStyles = makeStyles()(() => ({
     right: 0,
     zIndex: 1,
     color: "white",
+  },
+  img: {
+    objectFit: "cover",
   },
 }));
 
@@ -108,8 +112,11 @@ function BookShelfItem(props: BookShelfItemProps) {
           }}
           style={{ height: "100%" }}
         >
-          <img
+          <Image
             src={getFileUrl(book.fileName, book.cover)}
+            className={classes.img}
+            width={150}
+            height={240}
             alt={`${book.fileName} cover`}
           />
           <ImageListItemBar title={book.title} subtitle={book.author} />
@@ -141,7 +148,11 @@ function BookShelfItem(props: BookShelfItemProps) {
   );
 }
 
-export type BookListProps = BookshelfProps & {
+export type BookListProps = {
+  books: Omit<Prisma.Book, "userId" | "content" | "current" | "contentPath">[];
+  categories: (Prisma.Category & {
+    categoryBook: (Prisma.CategoryBook & { book: Prisma.Book })[];
+  })[];
   selected: number;
   onSelectFile: (file: File) => void;
   onAddBooksToCategory: (
@@ -203,10 +214,8 @@ export function BookList(props: BookListProps) {
   }, [categories, category]);
 
   const bookClick = (id: number) => {
-    return async () => {
-      const query = new URLSearchParams();
-      query.set("id", id.toString());
-      return router.push(`/reader?${query.toString()}`);
+    return () => {
+      return router.push(`/reader/${id}`);
     };
   };
 

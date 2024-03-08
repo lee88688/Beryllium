@@ -1,3 +1,5 @@
+"use client";
+
 import React, {
   useState,
   useRef,
@@ -8,8 +10,7 @@ import React, {
 import { type Contents, type Location } from "epubjs";
 import Popper, { type PopperProps } from "@mui/material/Popper";
 import { HighlightEditor } from "y/components/highlightEditor";
-import { addMark, removeMark, apiUpdateMark } from "../../../clientApi";
-import { getElementHeading } from "../../../pages/reader/index";
+import { getElementHeading } from "./reader";
 import type * as Prisma from "@prisma/client";
 import { MarkType } from "y/utils/constants";
 import { EpubReader } from "y/utils/epubReader";
@@ -17,6 +18,7 @@ import { useMutation } from "@tanstack/react-query";
 import { useTheme } from "@mui/material/styles";
 import { useMemoizedFn, usePrevious } from "ahooks";
 import useVirtualKeyboard from "y/hooks/useVirtualKeyboard";
+import { addMark, removeMark, updateMark } from "y/app/reader/[id]/actions";
 
 // window.EpubCFI = EpubCFI;
 
@@ -78,11 +80,11 @@ export function useReader({
   });
 
   const updateMarkMutation = useMutation({
-    mutationFn: (val: EditorValue & { id: number }) => apiUpdateMark(val),
+    mutationFn: (val: EditorValue & { id: number }) => updateMark(val),
   });
 
   const removeMutation = useMutation({
-    mutationFn: (id: number) => removeMark(id),
+    mutationFn: (id: number) => removeMark({ id }),
   });
 
   const updateHighlightElement = useCallback((value: EditorValue) => {

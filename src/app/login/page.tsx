@@ -1,20 +1,22 @@
+"use client";
+
 import React, { useEffect } from "react";
-import { useRouter } from "next/router";
+import { useRouter } from "next/navigation";
 import Button from "@mui/material/Button";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import Container from "@mui/material/Container";
 import { useFormik } from "formik";
-import { apiLogin } from "y/clientApi";
 import { toFormikValidationSchema } from "zod-formik-adapter";
 import { z } from "zod";
+import { loginAction } from "y/app/login/actions";
 
 const loginSchema = z.object({
   username: z.string().min(1),
   password: z.string().min(1),
 });
 
-export default function Login() {
+export default function Page() {
   const router = useRouter();
 
   const formik = useFormik({
@@ -24,7 +26,7 @@ export default function Login() {
     },
     validationSchema: toFormikValidationSchema(loginSchema),
     async onSubmit({ username, password }) {
-      await apiLogin({ username, password });
+      await loginAction({ username, password });
       return router.push("/bookshelf");
     },
   });

@@ -13,7 +13,7 @@ import {
 import Hidden from "@mui/material/Hidden";
 import SwipeableDrawer from "@mui/material/SwipeableDrawer";
 import Drawer from "@mui/material/Drawer";
-import { useRendered } from "../../../hooks/useRendered";
+import { useRendered } from "y/hooks/useRendered";
 import { HighlightList } from "y/components/highlightList";
 import { BookmarkList } from "y/components/bookmarkList";
 import type * as Prisma from "@prisma/client";

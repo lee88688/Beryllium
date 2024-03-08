@@ -1,5 +1,7 @@
+"use client";
+
 import React, { useState, useCallback, useRef, useEffect } from "react";
-import { useRouter } from "next/router";
+import { useRouter } from "next/navigation";
 import Typography from "@mui/material/Typography";
 import AppBar from "@mui/material/AppBar";
 import Toolbar from "@mui/material/Toolbar";
@@ -12,41 +14,38 @@ import ArrowBack from "@mui/icons-material/ArrowBack";
 import { useTheme } from "@mui/material/styles";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import { makeStyles } from "y/utils/makesStyles";
-import { useReader } from "y/components/pages/reader/epubReader";
-import BookmarkTitle from "y/components/pages/reader/bookmarkTitle";
-import {
-  apiUpdateBookCurrent,
-  apiUpdateMark,
-  getFileUrl,
-  getMark,
-  removeMark,
-} from "y/clientApi";
+import { useReader } from "y/app/reader/[id]/epubReader";
+import BookmarkTitle from "y/app/reader/[id]/bookmarkTitle";
+import { getFileUrl } from "y/clientApi";
 import {
   ReaderDrawer,
   drawerWidth,
   viewBreakPoint,
-} from "y/components/pages/reader/readerDrawer";
+} from "y/app/reader/[id]/readerDrawer";
 import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
 import truncate from "lodash/truncate";
-import { addMark } from "y/clientApi";
 import type * as Prisma from "@prisma/client";
 import { MarkType } from "y/utils/constants";
-import { type GetServerSidePropsResult, type GetServerSideProps } from "next";
-import { withSessionSsr } from "y/server/wrap";
-import { prisma } from "y/server/db";
-import groupBy from "lodash/groupBy";
-import { getBookToc } from "y/server/service/book";
 import {
   type NestedItemData,
   type NestedListItemClick,
 } from "y/components/nestedList";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import useScreenWakeLock from "y/hooks/useScreenWakeLock";
-import { type CreateMarkParams } from "../api/mark/create";
-import { ImagePreview } from "y/components/pages/reader/imagePreview";
+import { ImagePreview } from "y/app/reader/[id]/imagePreview";
 import { useMemoizedFn } from "ahooks";
-import { type UpdateMarkParams } from "../api/mark/update";
+import {
+  addMark,
+  getMark,
+  removeMark,
+  updateBookCurrent,
+  updateMark,
+} from "y/app/reader/[id]/actions";
+
+type CreateMarkParams = Omit<Prisma.Mark, "id" | "userId">;
+type UpdateMarkParams = Pick<Prisma.Mark, "id"> &
+  Partial<Omit<Prisma.Mark, "id" | "userId" | "bookId">>;
 
 const useStyles = makeStyles()((theme) => ({
   root: { display: "flex", flexDirection: "row-reverse" },
@@ -102,7 +101,7 @@ type ReaderProps = {
   highlights: Prisma.Mark[];
   bookmarks: Prisma.Mark[];
   tocData: NestedItemData[];
-} & Pick<Prisma.Book, "title" | "current" | "fileName" | "contentPath">;
+} & Pick<Prisma.Book, "id" | "title" | "current" | "fileName" | "contentPath">;
 
 export default function Reader(props: ReaderProps) {
   const [currentTocItem, setCurrentTocItem] = useState("");
@@ -110,8 +109,7 @@ export default function Reader(props: ReaderProps) {
 
   const { classes, cx } = useStyles();
   const router = useRouter();
-  const query = router.query;
-  const id = Number.parseInt(query.id as string);
+  const id = props.id;
   const title = props.title;
   const cfi = props.current;
   const bookFileName = props.fileName;
@@ -145,7 +143,7 @@ export default function Reader(props: ReaderProps) {
   const bookmarkList = bookmarkListQuery.data;
 
   const removeMarkMutation = useMutation({
-    mutationFn: (id: number) => removeMark(id),
+    mutationFn: (id: number) => removeMark({ id }),
   });
 
   const containerElRef = useRef<HTMLDivElement>(null);
@@ -177,7 +175,7 @@ export default function Reader(props: ReaderProps) {
     const cfi = location?.start?.cfi;
     if (!cfi || currentCfiRef.current === cfi) return;
     currentCfiRef.current = cfi;
-    await apiUpdateBookCurrent(id, cfi);
+    await updateBookCurrent({ bookId: id, current: cfi });
   }, [epubReaderRef, id]);
 
   useEffect(() => {
@@ -248,7 +246,7 @@ export default function Reader(props: ReaderProps) {
     setBookmarkTitleOpen(false);
     const mark = createOrUpdateBookmarkRef.current;
     if ((mark as UpdateMarkParams).id) {
-      await apiUpdateMark({
+      await updateMark({
         ...(mark as UpdateMarkParams),
         title,
       });
@@ -299,7 +297,7 @@ export default function Reader(props: ReaderProps) {
             onClose={menuClose}
             keepMounted
           >
-            <MenuItem onClick={addBookmark}>add bookmark</MenuItem>
+            <MenuItem onClick={addBookmark}>添加书签</MenuItem>
           </Menu>
         </Toolbar>
       </AppBar>
@@ -358,46 +356,3 @@ export function getElementHeading(el: HTMLElement) {
   }
   return headingText ?? "";
 }
-
-export const getServerSideProps: GetServerSideProps<ReaderProps> =
-  withSessionSsr(async ({ query }, session) => {
-    const userId = session.user.id;
-    const bookId = Number.parseInt(query.id as string);
-    const book = await prisma.book.findFirst({
-      where: {
-        userId,
-        id: bookId,
-      },
-    });
-
-    if (!book)
-      return {
-        redirect: {
-          permanent: false,
-          destination: "/bookshelf",
-        },
-      } as GetServerSidePropsResult<ReaderProps>;
-
-    const marks = await prisma.mark.findMany({
-      where: {
-        userId,
-        bookId,
-      },
-    });
-
-    const groups = groupBy(marks, "type");
-
-    const tocData = await getBookToc(book);
-
-    return {
-      props: {
-        title: book.title,
-        current: book.current,
-        fileName: book.fileName,
-        contentPath: book.contentPath,
-        highlights: groups[MarkType.Highlight] ?? [],
-        bookmarks: groups[MarkType.Bookmark] ?? [],
-        tocData,
-      },
-    };
-  });

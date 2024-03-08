@@ -1,40 +1,39 @@
+"use client";
+
 import React, { useState, useMemo, useEffect } from "react";
-import { useRouter } from "next/router";
+import { useRouter } from "next/navigation";
 import AppBar from "@mui/material/AppBar";
 import Toolbar from "@mui/material/Toolbar";
 import IconButton from "@mui/material/IconButton";
 import MenuIcon from "@mui/icons-material/Menu";
 import Typography from "@mui/material/Typography";
 import Box from "@mui/material/Box";
-import {
-  apiAddBooksToCategory,
-  apiCreateCategory,
-  apiDeleteBook,
-  apiGetBook,
-  apiGetCategory,
-  apiRemoveBooksFromCategory,
-  uploadBook,
-} from "y/clientApi";
+import { uploadBook } from "y/clientApi";
 import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
 import MoreVert from "@mui/icons-material/MoreVert";
 import type * as Prisma from "@prisma/client";
-import { apiRemoveCategory } from "y/clientApi";
-import { type GetServerSideProps } from "next";
-import { prisma } from "y/server/db";
-import { withSessionSsr } from "y/server/wrap";
 import { closeSnackbar, useSnackbar } from "notistack";
 import { makeStyles } from "y/utils/makesStyles";
 import { useQuery } from "@tanstack/react-query";
-import { BookList } from "y/components/pages/bookshelf/bookList";
-import { BookshelfDrawer } from "y/components/pages/bookshelf/drawer";
+import { BookList } from "y/app/bookshelf/bookList";
+import { BookshelfDrawer } from "y/app/bookshelf/drawer";
 import { useConfirmDialog } from "y/hooks/useConfirmDialog";
 import { ThemeModeIconButton } from "y/components/themeModeIconButton";
+import {
+  addBooksToCategory,
+  createCategory,
+  deleteBook,
+  getBook,
+  getCategory,
+  removeBooksFromCategory,
+  removeCategory,
+} from "y/app/bookshelf/actions";
 
-export const drawerWidth = 300;
+const drawerWidth = 300;
 
 export interface BookshelfProps {
-  books: Prisma.Book[];
+  books: Omit<Prisma.Book, "userId">[];
   categories: (Prisma.Category & {
     categoryBook: (Prisma.CategoryBook & { book: Prisma.Book })[];
   })[];
@@ -66,7 +65,7 @@ const useStyles = makeStyles()((theme) => ({
   },
 }));
 
-export default function Bookshelf(props: BookshelfProps) {
+export default function Bookshelf() {
   const [selectedCategory, setSelectedCategory] = useState(0);
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
   const [menuAnchor, setMenuAnchor] = useState<HTMLButtonElement>();
@@ -77,19 +76,19 @@ export default function Bookshelf(props: BookshelfProps) {
   const router = useRouter();
 
   useEffect(() => {
-    void router.prefetch("/reader");
+    void router.prefetch("/reader/[id]");
   }, [router]);
 
   const categoryQuery = useQuery({
     queryKey: ["getCategory"] as const,
-    queryFn: () => apiGetCategory().then((res) => res.data),
-    initialData: props.categories,
+    queryFn: () => getCategory().then((res) => res.data),
+    initialData: [],
   });
 
   const bookQuery = useQuery({
     queryKey: ["getBook"],
-    queryFn: () => apiGetBook().then((res) => res.data),
-    initialData: props.books,
+    queryFn: () => getBook().then((res) => res.data),
+    initialData: [],
   });
 
   const totalBooks = bookQuery.data;
@@ -122,7 +121,7 @@ export default function Bookshelf(props: BookshelfProps) {
       return;
     }
     closeDialog();
-    await apiRemoveCategory({ id: selectedCategory });
+    await removeCategory({ id: selectedCategory });
     setSelectedCategory(0);
     await categoryQuery.refetch();
   };
@@ -140,7 +139,7 @@ export default function Bookshelf(props: BookshelfProps) {
   const handleAddBooksToCategory = async (
     params: { categoryId: number; bookId: number }[],
   ) => {
-    await apiAddBooksToCategory(params);
+    await addBooksToCategory(params);
     enqueueSnackbar("添加成功", { variant: "success" });
     await categoryQuery.refetch();
   };
@@ -157,7 +156,8 @@ export default function Bookshelf(props: BookshelfProps) {
     } catch (e) {
       return;
     }
-    await apiRemoveBooksFromCategory(categoryId, [bookId]);
+    closeDialog();
+    await removeBooksFromCategory({ categoryId, bookIds: [bookId] });
     await categoryQuery.refetch();
   };
 
@@ -170,13 +170,13 @@ export default function Bookshelf(props: BookshelfProps) {
     } catch (e) {
       return;
     }
-    await apiDeleteBook({ id: bookId });
+    await deleteBook({ id: bookId });
     closeDialog();
     await Promise.all([categoryQuery.refetch(), bookQuery.refetch()]);
   };
 
   const handleCreateCategory = async (name: string) => {
-    await apiCreateCategory({ name });
+    await createCategory({ name });
     await categoryQuery.refetch();
   };
 
@@ -244,27 +244,3 @@ export default function Bookshelf(props: BookshelfProps) {
     </>
   );
 }
-
-export const getServerSideProps: GetServerSideProps<BookshelfProps> =
-  withSessionSsr(async (params, session) => {
-    const user = session.user;
-
-    const books = await prisma.book.findMany({ where: { userId: user.id } });
-
-    const categories = await prisma.category.findMany({
-      where: {
-        userId: user.id,
-      },
-      include: {
-        categoryBook: {
-          include: {
-            book: true,
-          },
-        },
-      },
-    });
-
-    return {
-      props: { books, categories },
-    };
-  });
