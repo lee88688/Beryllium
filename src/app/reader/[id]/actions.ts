@@ -7,7 +7,7 @@ import { prisma } from "y/server/db";
 import { userHasMark } from "y/server/service/mark";
 import omit from "lodash/omit";
 import { userHasBook } from "y/server/service/book";
-import { RequestError } from "y/utils/request";
+import { RequestError } from "y/interface";
 
 // --- marks ---
 

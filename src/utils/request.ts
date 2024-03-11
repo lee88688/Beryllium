@@ -1,3 +1,5 @@
+"use client";
+
 import { type UnwrapPromise } from "@prisma/client/runtime/library";
 import { enqueueSnackbar } from "notistack";
 

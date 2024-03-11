@@ -105,7 +105,7 @@ type ReaderProps = {
 
 export default function Reader(props: ReaderProps) {
   const [currentTocItem, setCurrentTocItem] = useState("");
-  const currentCfiRef = useRef("");
+  const currentCfiRef = useRef(props.current);
 
   const { classes, cx } = useStyles();
   const router = useRouter();
@@ -179,8 +179,14 @@ export default function Reader(props: ReaderProps) {
   }, [epubReaderRef, id]);
 
   useEffect(() => {
-    const id = setInterval(reportCurrentLocation, 1000);
-    return () => clearInterval(id);
+    let intervalId: ReturnType<typeof setInterval>;
+    const timeoutId = setTimeout(() => {
+      intervalId = setInterval(reportCurrentLocation, 1000);
+    }, 0);
+    return () => {
+      clearTimeout(timeoutId);
+      clearInterval(intervalId);
+    };
   }, [reportCurrentLocation]);
 
   const goBack = async () => {
