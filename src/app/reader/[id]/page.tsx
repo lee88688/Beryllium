@@ -1,15 +1,13 @@
 import Reader from "y/app/reader/[id]/reader";
 import { getBookToc } from "y/server/service/book";
 import { prisma } from "y/server/db";
-import { getIronSession } from "iron-session";
-import { ironOptions, type SessionData } from "y/config";
-import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import groupBy from "lodash/groupBy";
 import { MarkType } from "y/utils/constants";
+import { auth } from "y/server/wrapAppRouter";
 
 export default async function Page(props: { params: { id: string } }) {
-  const session = await getIronSession<SessionData>(cookies(), ironOptions);
+  const session = await auth();
 
   const userId = session.user.id;
   const bookId = Number.parseInt(props.params.id);

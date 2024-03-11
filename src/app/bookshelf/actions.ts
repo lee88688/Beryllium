@@ -3,6 +3,8 @@
 import { withSessionAction } from "y/server/wrapAppRouter";
 import { prisma } from "y/server/db";
 import * as z from "zod";
+import fsPromises from "fs/promises";
+import { asarFileDir } from "y/server/service/file";
 
 // --- book ----
 
@@ -54,6 +56,8 @@ export const deleteBook = withSessionAction(
       console.error(e);
       throw e;
     }
+
+    await fsPromises.rm(asarFileDir(book.fileName));
   },
 );
 
@@ -134,6 +138,8 @@ export const removeBooksFromCategory = withSessionAction(
 );
 
 // --- user ---
+
+// eslint-disable-next-line @typescript-eslint/require-await
 export const logout = withSessionAction(null, async (_, session) => {
-  session.destroy;
+  session.destroy();
 });

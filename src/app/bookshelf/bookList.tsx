@@ -12,7 +12,6 @@ import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
 import Paper from "@mui/material/Paper";
 import React, { useMemo, useRef, useState } from "react";
-import { type BookshelfProps } from "./page";
 import AddIcon from "@mui/icons-material/Add";
 import Dialog from "@mui/material/Dialog";
 import DialogTitle from "@mui/material/DialogTitle";
@@ -70,7 +69,7 @@ export enum BookMenuType {
 
 export interface BookShelfItemProps {
   selectedCategory: number;
-  book: Prisma.Book;
+  book: Omit<Prisma.Book, "userId" | "content" | "current" | "contentPath">;
   onClick: () => void;
   onMenuSelected: (type: BookMenuType, id: number) => void;
 }
