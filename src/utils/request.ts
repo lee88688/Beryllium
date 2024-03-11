@@ -1,3 +1,4 @@
+import { type UnwrapPromise } from "@prisma/client/runtime/library";
 import { enqueueSnackbar } from "notistack";
 
 export type ApiResponseData<T> = {
@@ -43,4 +44,27 @@ export function post<T>(url: string, body?: unknown) {
     }
     return res;
   });
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function requestAction<Action extends (...args: any[]) => any>(
+  action: Action,
+) {
+  return async (
+    ...args: Parameters<Action>
+  ): Promise<UnwrapPromise<ReturnType<Action>>> => {
+    let res;
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+      res = await action(...args);
+      const { isSuccess, message } = res as ApiResponseData<unknown>;
+      if (!isSuccess && message) {
+        enqueueSnackbar(message, { variant: "error" });
+      }
+    } catch (e) {
+      throw e;
+    }
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+    return res;
+  };
 }

@@ -6,6 +6,8 @@ import * as z from "zod";
 import fsPromises from "fs/promises";
 import { asarFileDir } from "y/server/service/file";
 
+import { RequestError } from "y/interface";
+
 // --- book ----
 
 export const getBook = withSessionAction(null, async function (_, session) {
@@ -36,7 +38,7 @@ export const deleteBook = withSessionAction(
       },
     });
     if (!book) {
-      throw new Error("book id is not found!");
+      throw new RequestError("book id is not found!");
     }
     const deleteMark = prisma.mark.deleteMany({
       where: {
@@ -79,7 +81,7 @@ export const getCategory = withSessionAction(null, async (_, session) => {
 });
 
 export const createCategory = withSessionAction(
-  z.object({ name: z.string() }),
+  z.object({ name: z.string().min(1) }),
   async ({ name }, session) => {
     const userId = session.user.id;
     const existCategory = await prisma.category.findFirst({
@@ -89,7 +91,7 @@ export const createCategory = withSessionAction(
       },
     });
     if (existCategory) {
-      throw new Error(`name ${name} has existed!`);
+      throw new RequestError(`name ${name} has existed!`);
     }
 
     await prisma.category.create({

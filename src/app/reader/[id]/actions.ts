@@ -7,6 +7,7 @@ import { prisma } from "y/server/db";
 import { userHasMark } from "y/server/service/mark";
 import omit from "lodash/omit";
 import { userHasBook } from "y/server/service/book";
+import { RequestError } from "y/utils/request";
 
 // --- marks ---
 
@@ -31,7 +32,7 @@ export const removeMark = withSessionAction(
     const userId = session.user.id;
 
     if (!(await userHasMark(userId, id))) {
-      throw new Error("book is not found");
+      throw new RequestError("book is not found");
     }
 
     await prisma.mark.delete({
@@ -57,7 +58,7 @@ export const updateMark = withSessionAction(
   async (params, session) => {
     const userId = session.user.id;
     if (!(await userHasMark(userId, params.id))) {
-      throw new Error("book is not found");
+      throw new RequestError("book is not found");
     }
 
     await prisma.mark.update({
@@ -86,7 +87,7 @@ export const addMark = withSessionAction(
     const userId = session.user.id;
 
     if (!(await userHasBook(userId, params.bookId))) {
-      throw new Error("book is not found!");
+      throw new RequestError("book is not found!");
     }
 
     await prisma.mark.create({

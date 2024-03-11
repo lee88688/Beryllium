@@ -1,4 +1,4 @@
-import { post, get } from "y/utils/request";
+import { post } from "y/utils/request";
 
 export function uploadBook(file: File) {
   const form = new FormData();

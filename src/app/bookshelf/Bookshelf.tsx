@@ -29,6 +29,7 @@ import {
   removeBooksFromCategory,
   removeCategory,
 } from "y/app/bookshelf/actions";
+import { requestAction } from "y/utils/request";
 
 const drawerWidth = 300;
 
@@ -176,7 +177,7 @@ export default function Bookshelf() {
   };
 
   const handleCreateCategory = async (name: string) => {
-    await createCategory({ name });
+    await requestAction(createCategory)({ name });
     await categoryQuery.refetch();
   };
 

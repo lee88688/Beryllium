@@ -6,6 +6,8 @@ import { getIronSession } from "iron-session";
 import { ironOptions, type SessionData } from "y/config";
 import { cookies } from "next/headers";
 
+import { RequestError } from "y/interface";
+
 export async function loginAction(data: {
   username: string;
   password: string;
@@ -19,7 +21,7 @@ export async function loginAction(data: {
   });
 
   if (!user) {
-    throw Error("email or password may not be correct");
+    throw new RequestError("email or password may not be correct");
   }
 
   const session = await getIronSession<SessionData>(cookies(), ironOptions);
