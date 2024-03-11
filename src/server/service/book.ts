@@ -1,3 +1,4 @@
+import "server-only";
 import { getTocPath, prisma } from "../db";
 import type * as Prisma from "@prisma/client";
 import { asarFileDir, readAsarFile } from "./file";

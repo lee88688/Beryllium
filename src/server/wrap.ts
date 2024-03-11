@@ -4,11 +4,16 @@ import type {
   NextApiRequest,
   NextApiResponse,
 } from "next";
-import { isAdmin } from "./service/user";
 import { type ZodError, type ZodTypeAny } from "zod";
 import { createFailRes } from "y/utils/apiResponse";
 import { getIronSession, type IronSession } from "iron-session";
 import { ironOptions, type SessionData } from "y/config";
+import { prisma } from "y/server/db";
+
+export async function isAdmin(userId: number) {
+  const user = await prisma.user.findFirst({ where: { id: userId } });
+  return Boolean(user?.isAdmin);
+}
 
 export type NextApiHandlerWithSession = (
   req: NextApiRequest,
