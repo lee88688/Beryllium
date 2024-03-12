@@ -19,6 +19,7 @@ import { useTheme } from "@mui/material/styles";
 import { useMemoizedFn, usePrevious } from "ahooks";
 import useVirtualKeyboard from "y/hooks/useVirtualKeyboard";
 import { addMark, removeMark, updateMark } from "y/app/reader/[id]/actions";
+import { requestAction } from "y/utils/request";
 
 // window.EpubCFI = EpubCFI;
 
@@ -207,14 +208,13 @@ export function useReader({
     epubReaderRef.current?.useTheme(themeMode);
   }, [themeMode]);
 
-  const addMarkMutate = addMarkMutation.mutateAsync;
   const handleEditorChange = useCallback(
     (value: EditorValue) => {
       if (!value.id) {
         // create new highlight
-        void addMarkMutate(value).then((res) => {
+        void requestAction(addMark)(value).then((res) => {
           setCurEditorValue((val) => {
-            const value = { ...val, id: res.data };
+            const value = { ...val, id: res.data.id };
             epubReaderRef.current?.addHighlight(value);
 
             return value;
@@ -224,7 +224,7 @@ export function useReader({
       }
       setCurEditorValue(value);
     },
-    [addMarkMutate, onHighlightRefetch],
+    [onHighlightRefetch],
   );
 
   const handleEditorCancel = useCallback(() => {

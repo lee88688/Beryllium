@@ -90,9 +90,11 @@ export const addMark = withSessionAction(
       throw new RequestError("book is not found!");
     }
 
-    await prisma.mark.create({
+    const { id } = await prisma.mark.create({
       data: { ...params, userId },
     });
+
+    return { id };
   },
 );
 
