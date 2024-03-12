@@ -128,10 +128,9 @@ export default function Reader(props: ReaderProps) {
 
   const highlightList = highlightListQuery.data;
 
-  const refetchHighlightList = useCallback(() => {
+  const refetchHighlightList = useMemoizedFn(() => {
     return highlightListQuery.refetch();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  });
 
   const bookmarkListQuery = useQuery({
     queryKey: ["getMark", id, MarkType.Bookmark],
